@@ -1037,9 +1037,13 @@
 </div>
 
 <script>
-    const STORAGE_KEY = "xiaohuiqiu_data_v6";
-    const PASSWORD_KEY = "xiaohuiqiu_admin_password";
+    // ================== 配置你的后端地址 ==================
+    const API_BASE = "https://api.lingrangxiao.de5.net";
+    // =======================================================
 
+    const STORAGE_KEY = "xiaohuiqiu_data_v6";
+
+    // 默认数据（作为网络异常兜底）
     const DEFAULT_DATA = {
         e5Cpu: [
             { name: "E5 2673 V3", price: 180, gen: "v3" },
@@ -1140,12 +1144,30 @@
         ]
     };
 
-    if(!localStorage.getItem(PASSWORD_KEY)) {
-        localStorage.setItem(PASSWORD_KEY, "admin123");
+    let APP_DATA = {};
+    let isAdmin = false;
+    let adminPwdCache = "admin123"; // 临时缓存密码
+
+    // ================== 页面初始化：从云端加载数据 ==================
+    async function initApp() {
+        try {
+            console.log("正在从云端加载配置...");
+            const res = await fetch(`${API_BASE}/api/data`);
+            if (res.ok) {
+                APP_DATA = await res.json();
+                console.log("✅ 云端配置加载成功！");
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
+            } else {
+                throw new Error("云端加载失败");
+            }
+        } catch (err) {
+            console.warn("⚠️ 网络异常，使用本地缓存数据", err);
+            APP_DATA = JSON.parse(localStorage.getItem(STORAGE_KEY)) || DEFAULT_DATA;
+        }
+        renderAllFrontData();
     }
 
-    let APP_DATA = JSON.parse(localStorage.getItem(STORAGE_KEY)) || DEFAULT_DATA;
-
+    // ================== 管理员登录逻辑 ==================
     const passwordModal = document.getElementById('passwordModal');
     const adminPasswordInput = document.getElementById('adminPasswordInput');
     const verifyPasswordBtn = document.getElementById('verifyPasswordBtn');
@@ -1159,44 +1181,58 @@
         }
     });
 
-    verifyPasswordBtn.addEventListener('click', () => {
-        const currentPassword = localStorage.getItem(PASSWORD_KEY);
-        if(adminPasswordInput.value === currentPassword) {
-            passwordModal.classList.remove('active');
-            adminPasswordInput.value = '';
-            switchPage(adminPage);
-            renderAllAdminPanels();
-        } else {
-            alert('密码错误！');
-        }
-    });
-
-    function changePassword() {
-        const oldPassword = document.getElementById('oldPasswordInput').value;
-        const newPassword = document.getElementById('newPasswordInput').value;
-        const confirmPassword = document.getElementById('confirmPasswordInput').value;
-        const currentPassword = localStorage.getItem(PASSWORD_KEY);
-
-        if(oldPassword !== currentPassword) {
-            alert('当前密码错误！');
-            return;
-        }
-        if(!newPassword || newPassword.length < 6) {
-            alert('新密码至少6位！');
-            return;
-        }
-        if(newPassword !== confirmPassword) {
-            alert('两次输入的新密码不一致！');
-            return;
-        }
-
-        localStorage.setItem(PASSWORD_KEY, newPassword);
-        document.getElementById('oldPasswordInput').value = '';
-        document.getElementById('newPasswordInput').value = '';
-        document.getElementById('confirmPasswordInput').value = '';
-        alert('✅ 密码修改成功！请牢记新密码');
+    if (verifyPasswordBtn) {
+        verifyPasswordBtn.addEventListener('click', async () => {
+            const inputPwd = adminPasswordInput.value;
+            try {
+                const res = await fetch(`${API_BASE}/api/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ password: inputPwd })
+                });
+                if (res.ok) {
+                    isAdmin = true;
+                    adminPwdCache = inputPwd;
+                    passwordModal.classList.remove('active');
+                    adminPasswordInput.value = '';
+                    switchPage(document.getElementById('adminPage'));
+                    renderAllAdminPanels();
+                    alert("✅ 管理员登录成功！");
+                } else {
+                    alert("❌ 密码错误！");
+                }
+            } catch (e) {
+                alert("⚠️ 无法连接服务器，请检查网络");
+            }
+        });
     }
 
+    // ================== 云端同步核心函数 ==================
+    async function uploadToCloud() {
+        if (!isAdmin) {
+            alert("无管理员权限，请先登录");
+            return;
+        }
+        try {
+            const payload = { ...APP_DATA, admin_password: adminPwdCache };
+            const res = await fetch(`${API_BASE}/api/save`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
+                alert("✅ 保存成功！已同步至云端，所有人刷新网页即可看到最新配置");
+                await initApp();
+            } else {
+                alert("❌ 保存失败，权限不足");
+            }
+        } catch (err) {
+            alert("⚠️ 同步失败，请检查网络");
+        }
+    }
+
+    // ================== 原有页面逻辑（保留并修改保存部分） ==================
     const allPages = document.querySelectorAll('.page');
     const homePage = document.getElementById('homePage');
     const e5ConfigPage = document.getElementById('e5ConfigPage');
@@ -1577,10 +1613,10 @@
         calculateTotalCore();
     }
 
-    e5Cpu.addEventListener('change', updateE5Boards);
-    e5Board.addEventListener('change', updateE5Ram);
-    coreCpu.addEventListener('change', updateCoreBoards);
-    coreBoard.addEventListener('change', updateCoreRam);
+    if(e5Cpu) e5Cpu.addEventListener('change', updateE5Boards);
+    if(e5Board) e5Board.addEventListener('change', updateE5Ram);
+    if(coreCpu) coreCpu.addEventListener('change', updateCoreBoards);
+    if(coreBoard) coreBoard.addEventListener('change', updateCoreRam);
 
     function calculateTotalE5() {
         const cpu = parseInt(e5Cpu.value) || 0;
@@ -1643,8 +1679,8 @@ CPU：${cpu.options[cpu.selectedIndex].dataset.name}
         navigator.clipboard.writeText(text).then(() => alert('✅ 完整配置已复制到剪贴板！'));
     }
 
-    document.getElementById('e5_copyBtn').onclick = () => copyConfig('e5');
-    document.getElementById('core_copyBtn').onclick = () => copyConfig('core');
+    if(document.getElementById('e5_copyBtn')) document.getElementById('e5_copyBtn').onclick = () => copyConfig('e5');
+    if(document.getElementById('core_copyBtn')) document.getElementById('core_copyBtn').onclick = () => copyConfig('core');
 
     function renderAllAdminPanels() {
         renderAdminTable('e5CpuTable', APP_DATA.e5Cpu, ['name', 'price', 'gen']);
@@ -1662,6 +1698,7 @@ CPU：${cpu.options[cpu.selectedIndex].dataset.name}
 
     function renderAdminTable(tableId, data, fields) {
         const table = document.getElementById(tableId);
+        if(!table) return;
         const tbody = table.querySelector('tbody');
         tbody.innerHTML = '';
         data.forEach((item, index) => {
@@ -1753,19 +1790,19 @@ CPU：${cpu.options[cpu.selectedIndex].dataset.name}
             }
         });
         localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
+        uploadToCloud(); // 同步到云端
         renderAllFrontData();
-        alert('✅ 保存成功！前台已实时更新');
     }
 
     function renderRecommendTable() {
         const table = document.getElementById('recommendTable');
+        if(!table) return;
         const tbody = table.querySelector('tbody');
         tbody.innerHTML = '';
         
         APP_DATA.recommends.forEach((rec, index) => {
             const tr = document.createElement('tr');
             
-            // 配置名称
             const td1 = document.createElement('td');
             const input1 = document.createElement('input');
             input1.type = 'text';
@@ -1776,7 +1813,6 @@ CPU：${cpu.options[cpu.selectedIndex].dataset.name}
             td1.appendChild(input1);
             tr.appendChild(td1);
             
-            // 标签文字
             const td2 = document.createElement('td');
             const input2 = document.createElement('input');
             input2.type = 'text';
@@ -1787,7 +1823,6 @@ CPU：${cpu.options[cpu.selectedIndex].dataset.name}
             td2.appendChild(input2);
             tr.appendChild(td2);
             
-            // 目标平台（下拉选择）
             const td3 = document.createElement('td');
             const select3 = document.createElement('select');
             select3.className = 'table-select';
@@ -1801,49 +1836,41 @@ CPU：${cpu.options[cpu.selectedIndex].dataset.name}
             td3.appendChild(select3);
             tr.appendChild(td3);
             
-            // CPU型号（下拉选择）
             const td4 = document.createElement('td');
             const select4 = createHardwareSelect(rec.platform, 'cpu', rec.config.cpu, index);
             td4.appendChild(select4);
             tr.appendChild(td4);
             
-            // 主板型号（下拉选择）
             const td5 = document.createElement('td');
             const select5 = createHardwareSelect(rec.platform, 'board', rec.config.board, index);
             td5.appendChild(select5);
             tr.appendChild(td5);
             
-            // 内存规格（下拉选择）
             const td6 = document.createElement('td');
             const select6 = createHardwareSelect(rec.platform, 'memory', rec.config.memory, index);
             td6.appendChild(select6);
             tr.appendChild(td6);
             
-            // 显卡型号（下拉选择）
             const td7 = document.createElement('td');
             const select7 = createHardwareSelect(rec.platform, 'gpu', rec.config.gpu, index);
             td7.appendChild(select7);
             tr.appendChild(td7);
             
-            // 硬盘规格（下拉选择）
             const td8 = document.createElement('td');
             const select8 = createHardwareSelect(rec.platform, 'disk', rec.config.disk, index);
             td8.appendChild(select8);
             tr.appendChild(td8);
             
-            // 电源规格（下拉选择）
             const td9 = document.createElement('td');
             const select9 = createHardwareSelect(rec.platform, 'power', rec.config.power, index);
             td9.appendChild(select9);
             tr.appendChild(td9);
             
-            // 机箱类型（下拉选择）
             const td10 = document.createElement('td');
             const select10 = createHardwareSelect(rec.platform, 'case', rec.config.case, index);
             td10.appendChild(select10);
             tr.appendChild(td10);
             
-            // 操作
             const td11 = document.createElement('td');
             const delBtn = document.createElement('button');
             delBtn.className = 'delete-btn';
@@ -1898,7 +1925,6 @@ CPU：${cpu.options[cpu.selectedIndex].dataset.name}
     function updateRecommendOptions(index, newPlatform) {
         APP_DATA.recommends[index].platform = newPlatform;
         
-        // 更新默认配置
         if(newPlatform === 'e5') {
             APP_DATA.recommends[index].config = {
                 cpu: APP_DATA.e5Cpu[0].name,
@@ -1952,7 +1978,6 @@ CPU：${cpu.options[cpu.selectedIndex].dataset.name}
     function saveRecommend() {
         const table = document.getElementById('recommendTable');
         
-        // 保存文本输入
         const textInputs = table.querySelectorAll('input.text-input');
         textInputs.forEach(input => {
             const index = parseInt(input.dataset.index);
@@ -1960,14 +1985,12 @@ CPU：${cpu.options[cpu.selectedIndex].dataset.name}
             APP_DATA.recommends[index][field] = input.value;
         });
         
-        // 保存平台选择
         const platformSelects = table.querySelectorAll('select[data-field="platform"]');
         platformSelects.forEach(select => {
             const index = parseInt(select.dataset.index);
             APP_DATA.recommends[index].platform = select.value;
         });
         
-        // 保存硬件配置选择
         const configSelects = table.querySelectorAll('select[data-config="true"]');
         configSelects.forEach(select => {
             const index = parseInt(select.dataset.index);
@@ -1976,36 +1999,30 @@ CPU：${cpu.options[cpu.selectedIndex].dataset.name}
         });
         
         localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
+        uploadToCloud(); // 同步到云端
         renderRecommends();
-        alert('✅ 推荐配置保存成功！');
     }
 
     function saveServiceFee() {
         APP_DATA.serviceFee = parseInt(document.getElementById('serviceFeeInput').value);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
+        uploadToCloud(); // 同步到云端
         renderServiceFee();
         calculateTotalE5();
         calculateTotalCore();
-        alert('✅ 服务费保存成功！');
+    }
+
+    function changePassword() {
+        alert("⚠️ 密码修改功能已移至 Cloudflare Worker 后端配置");
     }
 
     function exportFullCode() {
-        const newCode = document.documentElement.outerHTML.replace(
-            'const DEFAULT_DATA = ' + JSON.stringify(DEFAULT_DATA, null, 4),
-            'const DEFAULT_DATA = ' + JSON.stringify(APP_DATA, null, 4)
-        );
-        const blob = new Blob([newCode], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = '小黑球装机铺_最新代码.html';
-        a.click();
-        URL.revokeObjectURL(url);
-        alert('✅ 完整代码已导出！直接替换GitHub里的文件即可更新网站');
+        alert("⚠️ 现在数据已存储在云端，无需导出代码，直接在后台修改并保存即可！");
     }
 
+    // 启动
     window.onload = () => {
-        renderAllFrontData();
+        initApp();
     };
 </script>
 </body>
