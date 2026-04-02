@@ -26,75 +26,10 @@
             --danger-color: #f53f3f;
         }
 
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            background-color: var(--light-color);
-            color: var(--dark-color);
-            line-height: 1.6;
-        }
-
-        .page {
-            width: 100%;
-            min-height: 100vh;
-            display: none;
-            position: absolute;
-            top: 0;
-            left: 0;
-            padding-bottom: 40px;
-        }
-        .page.active {
-            display: block;
-            z-index: 10;
-        }
-
-        .password-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-        }
-        .password-modal.active {
-            display: flex;
-        }
-        .password-box {
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: var(--shadow-hover);
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
-        .password-box h3 {
-            margin-bottom: 20px;
-            color: var(--primary-color);
-        }
-        .password-input {
-            width: 100%;
-            padding: 12px 15px;
-            border: var(--black-line);
-            border-radius: 8px;
-            font-size: 16px;
-            margin-bottom: 15px;
-        }
-        .password-btn {
-            padding: 10px 30px;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-        }
+        html { scroll-behavior: smooth; }
+        body { background-color: var(--light-color); color: var(--dark-color); line-height: 1.6; }
+        .page { width: 100%; min-height: 100vh; display: none; position: absolute; top: 0; left: 0; padding-bottom: 40px; }
+        .page.active { display: block; z-index: 10; }
 
         .hero {
             height: 72vh;
@@ -107,28 +42,11 @@
             padding: 0 20px;
             border-bottom: var(--black-line);
         }
-        .hero-content h1 {
-            font-size: 48px;
-            margin-bottom: 16px;
-            font-weight: 800;
-        }
-        .hero-content p {
-            font-size: 18px;
-            opacity: 0.95;
-            max-width: 700px;
-            margin: 0 auto;
-        }
+        .hero-content h1 { font-size: 48px; margin-bottom: 16px; font-weight: 800; }
+        .hero-content p { font-size: 18px; opacity: 0.95; max-width: 700px; margin: 0 auto; }
 
-        .card-container {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-        }
+        .card-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; }
         .config-card {
             background: var(--white-color);
             border-radius: 12px;
@@ -139,38 +57,11 @@
             cursor: pointer;
             text-align: left;
         }
-        .config-card:hover {
-            transform: translateY(-8px);
-            box-shadow: var(--shadow-hover);
-        }
-        .config-card h3 {
-            font-size: 24px;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-            font-weight: 700;
-        }
-        .config-card p {
-            color: var(--gray-color);
-            line-height: 1.8;
-        }
-        .recommend-badge {
-            display: inline-block;
-            background: var(--success-color);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            margin-bottom: 10px;
-        }
-
-        .home-footer {
-            text-align: center;
-            padding: 30px 20px;
-            border-top: var(--black-line);
-            color: var(--gray-color);
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+        .config-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-hover); }
+        .config-card h3 { font-size: 24px; color: var(--primary-color); margin-bottom: 15px; font-weight: 700; }
+        .config-card p { color: var(--gray-color); line-height: 1.8; }
+        .recommend-badge { display: inline-block; background: var(--success-color); color: white; padding: 4px 10px; border-radius: 4px; font-size: 12px; margin-bottom: 10px; }
+        .home-footer { text-align: center; padding: 30px 20px; border-top: var(--black-line); color: var(--gray-color); max-width: 1200px; margin: 0 auto; }
 
         .config-header {
             background: linear-gradient(135deg, #165DFF 0%, #0039cb 100%);
@@ -195,385 +86,79 @@
             transition: var(--transition);
             border: var(--black-line);
         }
-        .back-btn:hover {
-            transform: translateY(-50%) scale(1.05);
-        }
-        .config-header h2 {
-            font-size: 24px;
-            font-weight: 700;
-        }
+        .back-btn:hover { transform: translateY(-50%) scale(1.05); }
+        .config-header h2 { font-size: 24px; font-weight: 700; }
 
-        .config-wrap {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-        .form-card {
-            background: var(--white-color);
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: var(--shadow);
-            border: var(--black-line);
-            margin-bottom: 30px;
-        }
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px 30px;
-        }
-        .form-item {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .form-label {
-            font-weight: 600;
-            color: var(--dark-color);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .param-tip {
-            font-size: 14px;
-            color: var(--primary-color);
-        }
-        .form-select {
-            padding: 12px 15px;
-            border: var(--black-line);
-            border-radius: 8px;
-            font-size: 15px;
-            background: var(--white-color);
-            transition: var(--transition);
-            cursor: pointer;
-        }
-        .form-select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
+        .config-wrap { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        .form-card { background: var(--white-color); border-radius: 12px; padding: 40px; box-shadow: var(--shadow); border: var(--black-line); margin-bottom: 30px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px 30px; }
+        .form-item { display: flex; flex-direction: column; gap: 8px; }
+        .form-label { font-weight: 600; color: var(--dark-color); display: flex; align-items: center; gap: 6px; }
+        .form-select { padding: 12px 15px; border: var(--black-line); border-radius: 8px; font-size: 15px; background: var(--white-color); transition: var(--transition); cursor: pointer; }
+        .form-select:focus { outline: none; border-color: var(--primary-color); }
 
-        .price-card {
-            background: var(--white-color);
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: var(--shadow);
-            border: var(--black-line);
-            text-align: center;
-        }
-        .price-total {
-            font-size: 16px;
-            color: var(--gray-color);
-            margin-bottom: 8px;
-        }
-        .price-fee {
-            font-size: 16px;
-            color: var(--gray-color);
-            margin-bottom: 16px;
-        }
-        .price-final {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 20px;
-        }
-        .copy-btn {
-            padding: 12px 30px;
-            background: var(--primary-color);
-            color: var(--white-color);
-            border: var(--black-line);
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-        .copy-btn:hover {
-            background: #0039cb;
-            transform: translateY(-3px);
-        }
+        .price-card { background: var(--white-color); border-radius: 12px; padding: 30px; box-shadow: var(--shadow); border: var(--black-line); text-align: center; }
+        .price-total { font-size: 16px; color: var(--gray-color); margin-bottom: 8px; }
+        .price-fee { font-size: 16px; color: var(--gray-color); margin-bottom: 16px; }
+        .price-final { font-size: 28px; font-weight: 700; color: var(--primary-color); margin-bottom: 20px; }
+        .copy-btn { padding: 12px 30px; background: var(--primary-color); color: var(--white-color); border: var(--black-line); border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: var(--transition); }
+        .copy-btn:hover { background: #0039cb; transform: translateY(-3px); }
 
-        .content-wrap {
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-        .content-card {
-            background: var(--white-color);
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: var(--shadow);
-            border: var(--black-line);
-            margin-bottom: 30px;
-        }
-        .content-card h3 {
-            font-size: 28px;
-            color: var(--primary-color);
-            margin-bottom: 20px;
-        }
-        .content-card h4 {
-            font-size: 20px;
-            margin: 25px 0 10px;
-        }
-        .content-card p, .content-card li {
-            color: var(--dark-color);
-            line-height: 1.8;
-            margin-bottom: 10px;
-        }
-        .content-card ul {
-            padding-left: 20px;
-            margin-bottom: 20px;
-        }
-        .comment-item {
-            padding: 20px;
-            border-bottom: 1px solid #eee;
-        }
-        .comment-item:last-child {
-            border-bottom: none;
-        }
-        .comment-user {
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-        .comment-star {
-            color: #ff9500;
-            margin-bottom: 8px;
-        }
+        .content-wrap { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+        .content-card { background: var(--white-color); border-radius: 12px; padding: 40px; box-shadow: var(--shadow); border: var(--black-line); margin-bottom: 30px; }
+        .content-card h3 { font-size: 28px; color: var(--primary-color); margin-bottom: 20px; }
+        .content-card h4 { font-size: 20px; margin: 25px 0 10px; }
+        .content-card p, .content-card li { color: var(--dark-color); line-height: 1.8; margin-bottom: 10px; }
+        .content-card ul { padding-left: 20px; margin-bottom: 20px; }
+        .comment-item { padding: 20px; border-bottom: 1px solid #eee; }
+        .comment-item:last-child { border-bottom: none; }
+        .comment-user { font-weight: 700; margin-bottom: 8px; }
+        .comment-star { color: #ff9500; margin-bottom: 8px; }
 
-        .admin-page {
-            background: var(--light-color);
-            padding: 20px;
-        }
-        .admin-header {
-            max-width: 1400px;
-            margin: 0 auto 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        .admin-header h2 {
-            color: var(--primary-color);
-            font-size: 32px;
-        }
-        .admin-back-btn {
-            padding: 10px 20px;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .admin-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 250px 1fr;
-            gap: 30px;
-        }
-        .admin-sidebar {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: var(--shadow);
-            border: var(--black-line);
-            height: fit-content;
-        }
-        .sidebar-item {
-            padding: 12px 15px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-        .sidebar-item:hover {
-            background: #f0f0f0;
-        }
-        .sidebar-item.active {
-            background: var(--primary-color);
-            color: white;
-        }
-        .admin-content {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: var(--shadow);
-            border: var(--black-line);
-            overflow-x: auto;
-        }
-        .content-panel {
-            display: none;
-        }
-        .content-panel.active {
-            display: block;
-        }
-        .price-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            min-width: 1400px;
-        }
-        .price-table th, .price-table td {
-            padding: 10px 8px;
-            border-bottom: 1px solid #eee;
-            text-align: left;
-            min-width: 120px;
-        }
-        .price-table th {
-            background: var(--light-color);
-            font-weight: 600;
-            font-size: 13px;
-        }
-        .price-input, .text-input, .table-select {
-            width: 100%;
-            padding: 6px 8px;
-            border: var(--black-line);
-            border-radius: 4px;
-        }
-        .delete-btn {
-            padding: 4px 10px;
-            background: var(--danger-color);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        .add-btn {
-            margin-top: 20px;
-            padding: 10px 20px;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .save-btn {
-            margin-top: 20px;
-            padding: 10px 30px;
-            background: var(--success-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .export-btn {
-            margin-top: 20px;
-            margin-left: 15px;
-            padding: 10px 30px;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .password-change-section {
-            margin-top: 40px;
-            padding-top: 30px;
-            border-top: 1px solid #eee;
-        }
-        .password-change-section h4 {
-            margin-bottom: 20px;
-            color: var(--dark-color);
-        }
-        .password-form-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-            max-width: 400px;
-        }
+        .admin-page { background: var(--light-color); padding: 20px; }
+        .admin-header { max-width: 1400px; margin: 0 auto 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+        .admin-header h2 { color: var(--primary-color); font-size: 32px; }
+        .admin-back-btn { padding: 10px 20px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
+        .admin-container { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 250px 1fr; gap: 30px; }
+        .admin-sidebar { background: white; border-radius: 12px; padding: 20px; box-shadow: var(--shadow); border: var(--black-line); height: fit-content; }
+        .sidebar-item { padding: 12px 15px; margin-bottom: 10px; border-radius: 8px; cursor: pointer; transition: var(--transition); }
+        .sidebar-item:hover { background: #f0f0f0; }
+        .sidebar-item.active { background: var(--primary-color); color: white; }
+        .admin-content { background: white; border-radius: 12px; padding: 30px; box-shadow: var(--shadow); border: var(--black-line); overflow-x: auto; }
+        .content-panel { display: none; }
+        .content-panel.active { display: block; }
+        .price-table { width: 100%; border-collapse: collapse; margin-top: 20px; min-width: 1400px; }
+        .price-table th, .price-table td { padding: 10px 8px; border-bottom: 1px solid #eee; text-align: left; min-width: 120px; }
+        .price-table th { background: var(--light-color); font-weight: 600; font-size: 13px; }
+        .price-input, .text-input, .table-select { width: 100%; padding: 6px 8px; border: var(--black-line); border-radius: 4px; }
+        .delete-btn { padding: 4px 10px; background: var(--danger-color); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .add-btn { margin-top: 20px; padding: 10px 20px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+        .save-btn { margin-top: 20px; padding: 10px 30px; background: var(--success-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
+        .export-btn { margin-top: 20px; margin-left: 15px; padding: 10px 30px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
+        .password-change-section { margin-top: 40px; padding-top: 30px; border-top: 1px solid #eee; }
+        .password-change-section h4 { margin-bottom: 20px; color: var(--dark-color); }
+        .password-form-grid { display: grid; grid-template-columns: 1fr; gap: 15px; max-width: 400px; }
 
         @media (max-width: 768px) {
-            .hero {
-                height: 40vh !important;
-                padding: 0 15px;
-            }
-            .hero-content h1 {
-                font-size: 28px;
-                margin-bottom: 10px;
-            }
-            .hero-content p {
-                font-size: 14px;
-                line-height: 1.5;
-            }
-            .card-grid {
-                gap: 15px;
-            }
-            .config-card {
-                padding: 20px 15px;
-            }
-            .config-card h3 {
-                font-size: 20px;
-            }
-            .config-card p {
-                font-size: 14px;
-            }
-            .form-grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-            .form-card {
-                padding: 20px 15px;
-            }
-            .config-header {
-                padding: 15px;
-            }
-            .config-header h2 {
-                font-size: 20px;
-            }
-            .back-btn {
-                padding: 6px 12px;
-                font-size: 14px;
-            }
-            .price-card {
-                padding: 20px 15px;
-            }
-            .price-final {
-                font-size: 24px;
-            }
-            .copy-btn {
-                padding: 10px 25px;
-                font-size: 14px;
-            }
-            .admin-container {
-                grid-template-columns: 1fr;
-            }
-            .admin-sidebar {
-                display: flex;
-                overflow-x: auto;
-                gap: 10px;
-            }
-            .sidebar-item {
-                white-space: nowrap;
-                margin-bottom: 0;
-            }
-            .content-card {
-                padding: 20px 15px;
-            }
-            .content-card h3 {
-                font-size: 22px;
-            }
-            .admin-content {
-                padding: 20px 15px;
-            }
-            .admin-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
+            .hero { height: 40vh !important; padding: 0 15px; }
+            .hero-content h1 { font-size: 28px; margin-bottom: 10px; }
+            .card-grid { gap: 15px; }
+            .config-card { padding: 20px 15px; }
+            .form-grid { grid-template-columns: 1fr; gap: 15px; }
+            .form-card { padding: 20px 15px; }
+            .admin-container { grid-template-columns: 1fr; }
+            .admin-sidebar { display: flex; overflow-x: auto; gap: 10px; }
+            .sidebar-item { white-space: nowrap; margin-bottom: 0; }
         }
     </style>
 </head>
 <body>
 
-<div class="password-modal" id="passwordModal">
-    <div class="password-box">
-        <h3>管理员验证</h3>
-        <input type="password" class="password-input" id="adminPasswordInput" placeholder="请输入管理员密码">
-        <button class="password-btn" id="verifyPasswordBtn">验证进入</button>
+<div class="password-modal" id="passwordModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 9999;">
+    <div class="password-box" style="background: white; padding: 40px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); text-align: center; max-width: 400px; width: 90%;">
+        <h3 style="margin-bottom: 20px; color: #165DFF;">管理员验证</h3>
+        <input type="password" class="password-input" id="adminPasswordInput" placeholder="请输入管理员密码" style="width: 100%; padding: 12px 15px; border: 1px solid #1d1d1f; border-radius: 8px; font-size: 16px; margin-bottom: 15px;">
+        <button class="password-btn" id="verifyPasswordBtn" style="padding: 10px 30px; background: #165DFF; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px;">验证进入</button>
     </div>
 </div>
 
@@ -625,7 +210,7 @@
         <div class="form-card">
             <div class="form-grid">
                 <div class="form-item">
-                    <label class="form-label">CPU型号 <span class="param-tip">ⓘ 配件参数</span></label>
+                    <label class="form-label">CPU型号</label>
                     <select class="form-select" id="e5_cpuSelect"></select>
                 </div>
                 <div class="form-item">
@@ -641,7 +226,7 @@
                     <select class="form-select" id="e5_memorySelect"></select>
                 </div>
                 <div class="form-item">
-                    <label class="form-label">显卡类型 <span class="param-tip">ⓘ 配件参数</span></label>
+                    <label class="form-label">显卡类型</label>
                     <select class="form-select" id="e5_gpuSelect"></select>
                 </div>
                 <div class="form-item">
@@ -649,7 +234,7 @@
                     <select class="form-select" id="e5_diskSelect"></select>
                 </div>
                 <div class="form-item">
-                    <label class="form-label">电源大小 <span class="param-tip">ⓘ 配件参数</span></label>
+                    <label class="form-label">电源大小</label>
                     <select class="form-select" id="e5_powerSelect"></select>
                 </div>
                 <div class="form-item">
@@ -678,7 +263,7 @@
         <div class="form-card">
             <div class="form-grid">
                 <div class="form-item">
-                    <label class="form-label">CPU型号 <span class="param-tip">ⓘ 配件参数</span></label>
+                    <label class="form-label">CPU型号</label>
                     <select class="form-select" id="core_cpuSelect"></select>
                 </div>
                 <div class="form-item">
@@ -694,7 +279,7 @@
                     <select class="form-select" id="core_memorySelect"></select>
                 </div>
                 <div class="form-item">
-                    <label class="form-label">显卡类型 <span class="param-tip">ⓘ 配件参数</span></label>
+                    <label class="form-label">显卡类型</label>
                     <select class="form-select" id="core_gpuSelect"></select>
                 </div>
                 <div class="form-item">
@@ -702,7 +287,7 @@
                     <select class="form-select" id="core_diskSelect"></select>
                 </div>
                 <div class="form-item">
-                    <label class="form-label">电源大小 <span class="param-tip">ⓘ 配件参数</span></label>
+                    <label class="form-label">电源大小</label>
                     <select class="form-select" id="core_powerSelect"></select>
                 </div>
                 <div class="form-item">
@@ -801,16 +386,6 @@
                 <div class="comment-user">王同学 | 办公家用</div>
                 <div class="comment-star">★★★★★</div>
                 <p>纯小白一个，老板耐心给我推荐了E3的配置，日常办公、追剧、上网课完全够用，一千多块钱搞定全套，还远程教我怎么用，太贴心了！</p>
-            </div>
-            <div class="comment-item">
-                <div class="comment-user">刘先生 | 设计剪辑</div>
-                <div class="comment-star">★★★★★</div>
-                <p>13700KF+4070Ti的配置，PR/AE渲染速度特别快，老板给的配置单特别合理，没有任何溢价，装机测试好才发过来，到手直接用，太省心了！</p>
-            </div>
-            <div class="comment-item">
-                <div class="comment-user">赵同学 | 新手装机</div>
-                <div class="comment-star">★★★★★</div>
-                <p>第一次自己装机，老板给了详细的教程，全程一对一指导，从选配置到点亮机器，一步一步教我，最后一次点亮，太有成就感了！价格也特别良心！</p>
             </div>
         </div>
     </div>
@@ -1019,7 +594,6 @@
                         <input type="number" id="serviceFeeInput" class="price-input" value="150" style="width: 150px;">
                     </div>
                     <button class="save-btn" onclick="saveServiceFee()">保存修改</button>
-                    <button class="export-btn" onclick="exportFullCode()">导出完整最新代码</button>
 
                     <div class="password-change-section">
                         <h4>修改管理员密码</h4>
@@ -1179,7 +753,7 @@
             clickCount++;
             if(clickCount >= 5) {
                 clickCount = 0;
-                passwordModal.classList.add('active');
+                passwordModal.style.display = 'flex';
             }
         });
     }
@@ -1196,7 +770,7 @@
                 if (res.ok) {
                     isAdmin = true;
                     adminPwdCache = inputPwd;
-                    passwordModal.classList.remove('active');
+                    passwordModal.style.display = 'none';
                     adminPasswordInput.value = '';
                     switchPage(document.getElementById('adminPage'));
                     renderAllAdminPanels();
@@ -1205,12 +779,11 @@
                     alert("❌ 密码错误！");
                 }
             } catch (e) {
-                // 网络异常时，尝试本地密码验证
                 const localPwd = localStorage.getItem("admin_pwd") || "admin123";
                 if (inputPwd === localPwd) {
                     isAdmin = true;
                     adminPwdCache = inputPwd;
-                    passwordModal.classList.remove('active');
+                    passwordModal.style.display = 'none';
                     adminPasswordInput.value = '';
                     switchPage(document.getElementById('adminPage'));
                     renderAllAdminPanels();
@@ -1240,7 +813,8 @@
                 alert("✅ 保存成功！已同步至云端，所有人刷新网页即可看到最新配置");
                 await initApp();
             } else {
-                alert("❌ 保存失败，权限不足");
+                const result = await res.json();
+                alert("❌ 保存失败：" + (result.message || "权限不足"));
             }
         } catch (err) {
             alert("⚠️ 同步失败，请检查网络，数据已保存到本地");
@@ -1248,7 +822,7 @@
         }
     }
 
-    // ================== 原有页面逻辑（保留并修改保存部分） ==================
+    // ================== 页面切换 ==================
     const allPages = document.querySelectorAll('.page');
     const homePage = document.getElementById('homePage');
     const e5ConfigPage = document.getElementById('e5ConfigPage');
@@ -1298,6 +872,7 @@
         });
     });
 
+    // ================== 渲染函数 ==================
     function renderRecommends() {
         const grid = document.getElementById('recommendGrid');
         if(!grid) return;
@@ -1732,6 +1307,7 @@ CPU：${cpu.options[cpu.selectedIndex].dataset.name}
     if(document.getElementById('e5_copyBtn')) document.getElementById('e5_copyBtn').onclick = () => copyConfig('e5');
     if(document.getElementById('core_copyBtn')) document.getElementById('core_copyBtn').onclick = () => copyConfig('core');
 
+    // ================== 后台管理渲染 ==================
     function renderAllAdminPanels() {
         renderAdminTable('e5CpuTable', APP_DATA.e5Cpu, ['name', 'price', 'gen']);
         renderAdminTable('e5BoardTable', APP_DATA.e5Board, ['name', 'price', 'gen', 'ramType']);
@@ -1840,7 +1416,7 @@ CPU：${cpu.options[cpu.selectedIndex].dataset.name}
             }
         });
         localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
-        uploadToCloud(); // 同步到云端
+        uploadToCloud();
         renderAllFrontData();
     }
 
@@ -2050,7 +1626,7 @@ CPU：${cpu.options[cpu.selectedIndex].dataset.name}
         });
         
         localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
-        uploadToCloud(); // 同步到云端
+        uploadToCloud();
         renderRecommends();
     }
 
@@ -2059,19 +1635,57 @@ CPU：${cpu.options[cpu.selectedIndex].dataset.name}
         if(feeInput) {
             APP_DATA.serviceFee = parseInt(feeInput.value);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
-            uploadToCloud(); // 同步到云端
+            uploadToCloud();
             renderServiceFee();
             calculateTotalE5();
             calculateTotalCore();
         }
     }
 
-    function changePassword() {
-        alert("⚠️ 密码修改功能已移至 Cloudflare Worker 后端配置");
-    }
+    // ================== 【关键】完整的修改密码功能 ==================
+    async function changePassword() {
+        const oldPassword = document.getElementById('oldPasswordInput').value;
+        const newPassword = document.getElementById('newPasswordInput').value;
+        const confirmPassword = document.getElementById('confirmPasswordInput').value;
 
-    function exportFullCode() {
-        alert("⚠️ 现在数据已存储在云端，无需导出代码，直接在后台修改并保存即可！");
+        if (!oldPassword || !newPassword || !confirmPassword) {
+            alert("请填写完整的密码信息！");
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            alert("两次输入的新密码不一致！");
+            return;
+        }
+        if (newPassword.length < 6) {
+            alert("新密码长度不能少于6位！");
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_BASE}/api/change-password`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ oldPassword, newPassword, confirmPassword })
+            });
+            const result = await res.json();
+            if (result.success) {
+                alert(result.message);
+                // 清空输入框
+                document.getElementById('oldPasswordInput').value = '';
+                document.getElementById('newPasswordInput').value = '';
+                document.getElementById('confirmPasswordInput').value = '';
+                // 更新本地缓存密码
+                adminPwdCache = newPassword;
+                localStorage.setItem("admin_pwd", newPassword);
+                // 重新登录
+                isAdmin = false;
+                switchPage(document.getElementById('homePage'));
+            } else {
+                alert(result.message);
+            }
+        } catch (e) {
+            alert("修改密码失败，请检查网络！");
+        }
     }
 
     // 启动
