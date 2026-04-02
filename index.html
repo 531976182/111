@@ -1037,9 +1037,9 @@
 </div>
 
 <script>
-    // ================== 配置你的后端地址 ==================
+    // ================== 配置你的后端地址（确保完全正确）==================
     const API_BASE = "https://api.lingrangxiao.de5.net";
-    // =======================================================
+    // =======================================================================
 
     const STORAGE_KEY = "xiaohuiqiu_data_v6";
 
@@ -1146,7 +1146,7 @@
 
     let APP_DATA = {};
     let isAdmin = false;
-    let adminPwdCache = "admin123"; // 临时缓存密码
+    let adminPwdCache = "admin123";
 
     // ================== 页面初始化：从云端加载数据 ==================
     async function initApp() {
@@ -1173,13 +1173,16 @@
     const verifyPasswordBtn = document.getElementById('verifyPasswordBtn');
 
     let clickCount = 0;
-    document.querySelector('.hero-content h1').addEventListener('click', () => {
-        clickCount++;
-        if(clickCount >= 5) {
-            clickCount = 0;
-            passwordModal.classList.add('active');
-        }
-    });
+    const heroTitle = document.querySelector('.hero-content h1');
+    if (heroTitle) {
+        heroTitle.addEventListener('click', () => {
+            clickCount++;
+            if(clickCount >= 5) {
+                clickCount = 0;
+                passwordModal.classList.add('active');
+            }
+        });
+    }
 
     if (verifyPasswordBtn) {
         verifyPasswordBtn.addEventListener('click', async () => {
@@ -1202,7 +1205,19 @@
                     alert("❌ 密码错误！");
                 }
             } catch (e) {
-                alert("⚠️ 无法连接服务器，请检查网络");
+                // 网络异常时，尝试本地密码验证
+                const localPwd = localStorage.getItem("admin_pwd") || "admin123";
+                if (inputPwd === localPwd) {
+                    isAdmin = true;
+                    adminPwdCache = inputPwd;
+                    passwordModal.classList.remove('active');
+                    adminPasswordInput.value = '';
+                    switchPage(document.getElementById('adminPage'));
+                    renderAllAdminPanels();
+                    alert("✅ 本地登录成功（网络异常）");
+                } else {
+                    alert("❌ 密码错误！");
+                }
             }
         });
     }
@@ -1228,7 +1243,8 @@
                 alert("❌ 保存失败，权限不足");
             }
         } catch (err) {
-            alert("⚠️ 同步失败，请检查网络");
+            alert("⚠️ 同步失败，请检查网络，数据已保存到本地");
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
         }
     }
 
@@ -1262,16 +1278,16 @@
         switchPage(homePage);
     }
 
-    e5Card.addEventListener('click', () => switchPage(e5ConfigPage));
-    coreCard.addEventListener('click', () => switchPage(coreConfigPage));
-    guideCard.addEventListener('click', () => switchPage(guidePage));
-    commentCard.addEventListener('click', () => switchPage(commentPage));
-    adminBackBtn.addEventListener('click', goToHome);
+    if(e5Card) e5Card.addEventListener('click', () => switchPage(e5ConfigPage));
+    if(coreCard) coreCard.addEventListener('click', () => switchPage(coreConfigPage));
+    if(guideCard) guideCard.addEventListener('click', () => switchPage(guidePage));
+    if(commentCard) commentCard.addEventListener('click', () => switchPage(commentPage));
+    if(adminBackBtn) adminBackBtn.addEventListener('click', goToHome);
 
-    backHomeFromE5.addEventListener('click', goToHome);
-    backHomeFromCore.addEventListener('click', goToHome);
-    backHomeFromGuide.addEventListener('click', goToHome);
-    backHomeFromComment.addEventListener('click', goToHome);
+    if(backHomeFromE5) backHomeFromE5.addEventListener('click', goToHome);
+    if(backHomeFromCore) backHomeFromCore.addEventListener('click', goToHome);
+    if(backHomeFromGuide) backHomeFromGuide.addEventListener('click', goToHome);
+    if(backHomeFromComment) backHomeFromComment.addEventListener('click', goToHome);
 
     document.querySelectorAll('.sidebar-item').forEach(item => {
         item.addEventListener('click', () => {
@@ -1284,6 +1300,7 @@
 
     function renderRecommends() {
         const grid = document.getElementById('recommendGrid');
+        if(!grid) return;
         grid.innerHTML = '';
         APP_DATA.recommends.forEach((rec, index) => {
             const card = document.createElement('div');
@@ -1310,6 +1327,7 @@
 
     function autoFillConfig(prefix, config) {
         const cpuSelect = document.getElementById(`${prefix}_cpuSelect`);
+        if(!cpuSelect) return;
         for(let i=0; i<cpuSelect.options.length; i++) {
             if(cpuSelect.options[i].dataset.name === config.cpu) {
                 cpuSelect.selectedIndex = i;
@@ -1322,6 +1340,7 @@
 
         setTimeout(() => {
             const boardSelect = document.getElementById(`${prefix}_boardSelect`);
+            if(!boardSelect) return;
             for(let i=0; i<boardSelect.options.length; i++) {
                 if(boardSelect.options[i].dataset.name === config.board) {
                     boardSelect.selectedIndex = i;
@@ -1333,42 +1352,52 @@
             else updateCoreRam();
 
             const memorySelect = document.getElementById(`${prefix}_memorySelect`);
-            for(let i=0; i<memorySelect.options.length; i++) {
-                if(memorySelect.options[i].dataset.name === config.memory) {
-                    memorySelect.selectedIndex = i;
-                    break;
+            if(memorySelect) {
+                for(let i=0; i<memorySelect.options.length; i++) {
+                    if(memorySelect.options[i].dataset.name === config.memory) {
+                        memorySelect.selectedIndex = i;
+                        break;
+                    }
                 }
             }
 
             const gpuSelect = document.getElementById(`${prefix}_gpuSelect`);
-            for(let i=0; i<gpuSelect.options.length; i++) {
-                if(gpuSelect.options[i].dataset.name === config.gpu) {
-                    gpuSelect.selectedIndex = i;
-                    break;
+            if(gpuSelect) {
+                for(let i=0; i<gpuSelect.options.length; i++) {
+                    if(gpuSelect.options[i].dataset.name === config.gpu) {
+                        gpuSelect.selectedIndex = i;
+                        break;
+                    }
                 }
             }
 
             const diskSelect = document.getElementById(`${prefix}_diskSelect`);
-            for(let i=0; i<diskSelect.options.length; i++) {
-                if(diskSelect.options[i].dataset.name === config.disk) {
-                    diskSelect.selectedIndex = i;
-                    break;
+            if(diskSelect) {
+                for(let i=0; i<diskSelect.options.length; i++) {
+                    if(diskSelect.options[i].dataset.name === config.disk) {
+                        diskSelect.selectedIndex = i;
+                        break;
+                    }
                 }
             }
 
             const powerSelect = document.getElementById(`${prefix}_powerSelect`);
-            for(let i=0; i<powerSelect.options.length; i++) {
-                if(powerSelect.options[i].dataset.name === config.power) {
-                    powerSelect.selectedIndex = i;
-                    break;
+            if(powerSelect) {
+                for(let i=0; i<powerSelect.options.length; i++) {
+                    if(powerSelect.options[i].dataset.name === config.power) {
+                        powerSelect.selectedIndex = i;
+                        break;
+                    }
                 }
             }
 
             const caseSelect = document.getElementById(`${prefix}_caseSelect`);
-            for(let i=0; i<caseSelect.options.length; i++) {
-                if(caseSelect.options[i].dataset.name === config.case) {
-                    caseSelect.selectedIndex = i;
-                    break;
+            if(caseSelect) {
+                for(let i=0; i<caseSelect.options.length; i++) {
+                    if(caseSelect.options[i].dataset.name === config.case) {
+                        caseSelect.selectedIndex = i;
+                        break;
+                    }
                 }
             }
 
@@ -1379,6 +1408,7 @@
 
     function renderE5Cpu() {
         const select = document.getElementById('e5_cpuSelect');
+        if(!select) return;
         select.innerHTML = '';
         APP_DATA.e5Cpu.forEach(item => {
             const opt = document.createElement('option');
@@ -1393,6 +1423,7 @@
 
     function renderCoreCpu() {
         const select = document.getElementById('core_cpuSelect');
+        if(!select) return;
         select.innerHTML = '';
         APP_DATA.coreCpu.forEach(item => {
             const opt = document.createElement('option');
@@ -1407,6 +1438,7 @@
 
     function renderE5Memory() {
         const select = document.getElementById('e5_memorySelect');
+        if(!select) return;
         select.innerHTML = '';
         APP_DATA.memory.filter(item => item.type === 'ECC').forEach(item => {
             const opt = document.createElement('option');
@@ -1419,6 +1451,7 @@
 
     function renderCoreMemory() {
         const select = document.getElementById('core_memorySelect');
+        if(!select) return;
         select.innerHTML = '';
         APP_DATA.memory.filter(item => item.type === 'DDR4').forEach(item => {
             const opt = document.createElement('option');
@@ -1432,6 +1465,7 @@
     function renderGpu() {
         const e5Gpu = document.getElementById('e5_gpuSelect');
         const coreGpu = document.getElementById('core_gpuSelect');
+        if(!e5Gpu || !coreGpu) return;
         e5Gpu.innerHTML = '';
         coreGpu.innerHTML = '';
         
@@ -1461,6 +1495,7 @@
     function renderDisk() {
         const e5Disk = document.getElementById('e5_diskSelect');
         const coreDisk = document.getElementById('core_diskSelect');
+        if(!e5Disk || !coreDisk) return;
         e5Disk.innerHTML = '';
         coreDisk.innerHTML = '';
         APP_DATA.disk.forEach(item => {
@@ -1481,6 +1516,7 @@
     function renderPower() {
         const e5Power = document.getElementById('e5_powerSelect');
         const corePower = document.getElementById('core_powerSelect');
+        if(!e5Power || !corePower) return;
         e5Power.innerHTML = '';
         corePower.innerHTML = '';
         APP_DATA.power.forEach(item => {
@@ -1501,6 +1537,7 @@
     function renderCase() {
         const e5Case = document.getElementById('e5_caseSelect');
         const coreCase = document.getElementById('core_caseSelect');
+        if(!e5Case || !coreCase) return;
         e5Case.innerHTML = '';
         coreCase.innerHTML = '';
         APP_DATA.case.forEach(item => {
@@ -1519,9 +1556,12 @@
     }
 
     function renderServiceFee() {
-        document.getElementById('e5_serviceFee').textContent = APP_DATA.serviceFee;
-        document.getElementById('core_serviceFee').textContent = APP_DATA.serviceFee;
-        document.getElementById('serviceFeeInput').value = APP_DATA.serviceFee;
+        const e5Fee = document.getElementById('e5_serviceFee');
+        const coreFee = document.getElementById('core_serviceFee');
+        const feeInput = document.getElementById('serviceFeeInput');
+        if(e5Fee) e5Fee.textContent = APP_DATA.serviceFee;
+        if(coreFee) coreFee.textContent = APP_DATA.serviceFee;
+        if(feeInput) feeInput.value = APP_DATA.serviceFee;
     }
 
     function renderAllFrontData() {
@@ -1544,9 +1584,10 @@
     const e5RamFreq = document.getElementById('e5_ramFreqSelect');
 
     function updateE5Boards() {
-        if(!e5Cpu.options.length) return;
+        if(!e5Cpu || !e5Cpu.options.length) return;
         const gen = e5Cpu.options[e5Cpu.selectedIndex].dataset.gen;
         const boards = APP_DATA.e5Board.filter(item => item.gen.includes(gen));
+        if(!e5Board) return;
         e5Board.innerHTML = '';
         boards.forEach(item => {
             const opt = document.createElement('option');
@@ -1562,9 +1603,10 @@
     }
 
     function updateE5Ram() {
-        if (!e5Board.options.length) return;
+        if (!e5Board || !e5Board.options.length) return;
         const freqList = JSON.parse(e5Board.options[e5Board.selectedIndex].dataset.freq);
         const ramType = e5Board.options[e5Board.selectedIndex].dataset.ramType;
+        if(!e5RamFreq) return;
         e5RamFreq.innerHTML = '';
         freqList.forEach(freq => {
             const opt = document.createElement('option');
@@ -1581,9 +1623,10 @@
     const coreRamFreq = document.getElementById('core_ramFreqSelect');
 
     function updateCoreBoards() {
-        if(!coreCpu.options.length) return;
+        if(!coreCpu || !coreCpu.options.length) return;
         const gen = coreCpu.options[coreCpu.selectedIndex].dataset.gen;
         const boards = APP_DATA.coreBoard.filter(item => item.gen.includes(gen));
+        if(!coreBoard) return;
         coreBoard.innerHTML = '';
         boards.forEach(item => {
             const opt = document.createElement('option');
@@ -1599,9 +1642,10 @@
     }
 
     function updateCoreRam() {
-        if (!coreBoard.options.length) return;
+        if (!coreBoard || !coreBoard.options.length) return;
         const freqList = JSON.parse(coreBoard.options[coreBoard.selectedIndex].dataset.freq);
         const ramType = coreBoard.options[coreBoard.selectedIndex].dataset.ramType;
+        if(!coreRamFreq) return;
         coreRamFreq.innerHTML = '';
         freqList.forEach(freq => {
             const opt = document.createElement('option');
@@ -1619,31 +1663,35 @@
     if(coreBoard) coreBoard.addEventListener('change', updateCoreRam);
 
     function calculateTotalE5() {
-        const cpu = parseInt(e5Cpu.value) || 0;
-        const board = parseInt(e5Board.value) || 0;
-        const memory = parseInt(document.getElementById('e5_memorySelect').value) || 0;
-        const gpu = parseInt(document.getElementById('e5_gpuSelect').value) || 0;
-        const disk = parseInt(document.getElementById('e5_diskSelect').value) || 0;
-        const power = parseInt(document.getElementById('e5_powerSelect').value) || 0;
-        const case_ = parseInt(document.getElementById('e5_caseSelect').value) || 0;
+        const cpu = e5Cpu ? parseInt(e5Cpu.value) || 0 : 0;
+        const board = e5Board ? parseInt(e5Board.value) || 0 : 0;
+        const memory = document.getElementById('e5_memorySelect') ? parseInt(document.getElementById('e5_memorySelect').value) || 0 : 0;
+        const gpu = document.getElementById('e5_gpuSelect') ? parseInt(document.getElementById('e5_gpuSelect').value) || 0 : 0;
+        const disk = document.getElementById('e5_diskSelect') ? parseInt(document.getElementById('e5_diskSelect').value) || 0 : 0;
+        const power = document.getElementById('e5_powerSelect') ? parseInt(document.getElementById('e5_powerSelect').value) || 0 : 0;
+        const case_ = document.getElementById('e5_caseSelect') ? parseInt(document.getElementById('e5_caseSelect').value) || 0 : 0;
         
         const total = cpu + board + memory + gpu + disk + power + case_;
-        document.getElementById('e5_partsTotal').textContent = `¥${total.toFixed(2)}`;
-        document.getElementById('e5_finalPrice').textContent = `¥${(total + APP_DATA.serviceFee).toFixed(2)}`;
+        const e5PartsTotal = document.getElementById('e5_partsTotal');
+        const e5FinalPrice = document.getElementById('e5_finalPrice');
+        if(e5PartsTotal) e5PartsTotal.textContent = `¥${total.toFixed(2)}`;
+        if(e5FinalPrice) e5FinalPrice.textContent = `¥${(total + APP_DATA.serviceFee).toFixed(2)}`;
     }
 
     function calculateTotalCore() {
-        const cpu = parseInt(coreCpu.value) || 0;
-        const board = parseInt(coreBoard.value) || 0;
-        const memory = parseInt(document.getElementById('core_memorySelect').value) || 0;
-        const gpu = parseInt(document.getElementById('core_gpuSelect').value) || 0;
-        const disk = parseInt(document.getElementById('core_diskSelect').value) || 0;
-        const power = parseInt(document.getElementById('core_powerSelect').value) || 0;
-        const case_ = parseInt(document.getElementById('core_caseSelect').value) || 0;
+        const cpu = coreCpu ? parseInt(coreCpu.value) || 0 : 0;
+        const board = coreBoard ? parseInt(coreBoard.value) || 0 : 0;
+        const memory = document.getElementById('core_memorySelect') ? parseInt(document.getElementById('core_memorySelect').value) || 0 : 0;
+        const gpu = document.getElementById('core_gpuSelect') ? parseInt(document.getElementById('core_gpuSelect').value) || 0 : 0;
+        const disk = document.getElementById('core_diskSelect') ? parseInt(document.getElementById('core_diskSelect').value) || 0 : 0;
+        const power = document.getElementById('core_powerSelect') ? parseInt(document.getElementById('core_powerSelect').value) || 0 : 0;
+        const case_ = document.getElementById('core_caseSelect') ? parseInt(document.getElementById('core_caseSelect').value) || 0 : 0;
         
         const total = cpu + board + memory + gpu + disk + power + case_;
-        document.getElementById('core_partsTotal').textContent = `¥${total.toFixed(2)}`;
-        document.getElementById('core_finalPrice').textContent = `¥${(total + APP_DATA.serviceFee).toFixed(2)}`;
+        const corePartsTotal = document.getElementById('core_partsTotal');
+        const coreFinalPrice = document.getElementById('core_finalPrice');
+        if(corePartsTotal) corePartsTotal.textContent = `¥${total.toFixed(2)}`;
+        if(coreFinalPrice) coreFinalPrice.textContent = `¥${(total + APP_DATA.serviceFee).toFixed(2)}`;
     }
 
     document.querySelectorAll('#e5ConfigPage .form-select').forEach(item => {
@@ -1663,17 +1711,19 @@
         const power = document.getElementById(`${prefix}_powerSelect`);
         const case_ = document.getElementById(`${prefix}_caseSelect`);
 
+        if(!cpu || !board) return;
+
         const text = `
 【小黑球装机铺】${prefix === 'e5' ? 'E5服务器' : '酷睿游戏'}配置单
 CPU：${cpu.options[cpu.selectedIndex].dataset.name}
 主板：${board.options[board.selectedIndex].dataset.name}
-内存：${ramFreq.options[ramFreq.selectedIndex].dataset.name} ${memory.options[memory.selectedIndex].dataset.name}
-显卡：${gpu.options[gpu.selectedIndex].dataset.name}
-硬盘：${disk.options[disk.selectedIndex].dataset.name}
-电源：${power.options[power.selectedIndex].dataset.name}
-机箱：${case_.options[case_.selectedIndex].dataset.name}
-配件总价：${document.getElementById(`${prefix}_partsTotal`).textContent}
-最终售价：${document.getElementById(`${prefix}_finalPrice`).textContent}
+内存：${ramFreq ? ramFreq.options[ramFreq.selectedIndex].dataset.name : ''} ${memory ? memory.options[memory.selectedIndex].dataset.name : ''}
+显卡：${gpu ? gpu.options[gpu.selectedIndex].dataset.name : ''}
+硬盘：${disk ? disk.options[disk.selectedIndex].dataset.name : ''}
+电源：${power ? power.options[power.selectedIndex].dataset.name : ''}
+机箱：${case_ ? case_.options[case_.selectedIndex].dataset.name : ''}
+配件总价：${document.getElementById(`${prefix}_partsTotal`) ? document.getElementById(`${prefix}_partsTotal`).textContent : ''}
+最终售价：${document.getElementById(`${prefix}_finalPrice`) ? document.getElementById(`${prefix}_finalPrice`).textContent : ''}
         `.trim();
 
         navigator.clipboard.writeText(text).then(() => alert('✅ 完整配置已复制到剪贴板！'));
@@ -1977,6 +2027,7 @@ CPU：${cpu.options[cpu.selectedIndex].dataset.name}
 
     function saveRecommend() {
         const table = document.getElementById('recommendTable');
+        if(!table) return;
         
         const textInputs = table.querySelectorAll('input.text-input');
         textInputs.forEach(input => {
@@ -2004,12 +2055,15 @@ CPU：${cpu.options[cpu.selectedIndex].dataset.name}
     }
 
     function saveServiceFee() {
-        APP_DATA.serviceFee = parseInt(document.getElementById('serviceFeeInput').value);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
-        uploadToCloud(); // 同步到云端
-        renderServiceFee();
-        calculateTotalE5();
-        calculateTotalCore();
+        const feeInput = document.getElementById('serviceFeeInput');
+        if(feeInput) {
+            APP_DATA.serviceFee = parseInt(feeInput.value);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
+            uploadToCloud(); // 同步到云端
+            renderServiceFee();
+            calculateTotalE5();
+            calculateTotalCore();
+        }
     }
 
     function changePassword() {
