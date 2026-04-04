@@ -702,7 +702,7 @@
                     <select class="form-select" id="core_diskSelect"></select>
                 </div>
                 <div class="form-item">
-                    <label class="form-label">电源大小 <span class="param-tip">ⓘ 配件参数</span></label>
+                    <label class="form-label">电源大小</label>
                     <select class="form-select" id="core_powerSelect"></select>
                 </div>
                 <div class="form-item">
@@ -1141,7 +1141,7 @@
         ]
     };
 
-    let APP_DATA = DEFAULT_DATA; // 默认数据，加载后会从后端覆盖
+    let APP_DATA = DEFAULT_DATA;
 
     const passwordModal = document.getElementById('passwordModal');
     const adminPasswordInput = document.getElementById('adminPasswordInput');
@@ -1152,19 +1152,57 @@
         clickCount++;
         if(clickCount >= 5) {
             clickCount = 0;
-            passwordModal.classList.add('active');
+            // 检查本地密码是否有效
+            const savedPassword = localStorage.getItem(PASSWORD_KEY);
+            if(savedPassword) {
+                // 自动验证本地密码
+                verifyAndLogin(savedPassword);
+            } else {
+                passwordModal.classList.add('active');
+            }
         }
     });
 
+    // 核心：登录前必须先和后端验证密码
+    async function verifyAndLogin(password) {
+        try {
+            const response = await fetch(`${API_BASE}/api/verify-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    password: password,
+                }),
+            });
+            const result = await response.json();
+            if (result.success) {
+                // 密码正确，存到本地，进入后台
+                localStorage.setItem(PASSWORD_KEY, password);
+                passwordModal.classList.remove('active');
+                adminPasswordInput.value = '';
+                switchPage(adminPage);
+                renderAllAdminPanels();
+            } else {
+                // 密码错误，清除本地错误密码
+                localStorage.removeItem(PASSWORD_KEY);
+                alert('❌ 密码错误！请重新输入');
+                adminPasswordInput.value = '';
+                passwordModal.classList.add('active');
+            }
+        } catch (e) {
+            alert('❌ 网络错误，请稍后重试：' + e.message);
+        }
+    }
+
     // 密码验证函数
-    function verifyPassword() {
+    async function verifyPassword() {
         const password = adminPasswordInput.value;
-        // 把密码存到localStorage，刷新页面也不会丢失
-        localStorage.setItem(PASSWORD_KEY, password);
-        passwordModal.classList.remove('active');
-        adminPasswordInput.value = '';
-        switchPage(adminPage);
-        renderAllAdminPanels();
+        if(!password) {
+            alert('请输入密码！');
+            return;
+        }
+        await verifyAndLogin(password);
     }
 
     verifyPasswordBtn.addEventListener('click', verifyPassword);
@@ -1177,6 +1215,9 @@
         const password = localStorage.getItem(PASSWORD_KEY);
         if (!password) {
             alert('请先登录管理员账号！');
+            // 清除本地无效密码
+            localStorage.removeItem(PASSWORD_KEY);
+            passwordModal.classList.add('active');
             return false;
         }
         try {
@@ -1194,7 +1235,14 @@
             if (result.success) {
                 return true;
             } else {
-                alert('❌ 保存失败：' + result.message);
+                // 密码错误，清除本地密码，让用户重新登录
+                if(result.message === '密码错误') {
+                    localStorage.removeItem(PASSWORD_KEY);
+                    alert('❌ 密码已失效，请重新登录！');
+                    passwordModal.classList.add('active');
+                } else {
+                    alert('❌ 保存失败：' + result.message);
+                }
                 return false;
             }
         } catch (e) {
@@ -1243,7 +1291,13 @@
                 document.getElementById('confirmPasswordInput').value = '';
                 alert('✅ 密码修改成功！请牢记新密码');
             } else {
-                alert('❌ 密码修改失败：' + result.message);
+                if(result.message === '当前密码错误') {
+                    localStorage.removeItem(PASSWORD_KEY);
+                    alert('❌ 当前密码错误，请重新登录！');
+                    passwordModal.classList.add('active');
+                } else {
+                    alert('❌ 密码修改失败：' + result.message);
+                }
             }
         } catch (e) {
             alert('❌ 网络错误，请稍后重试：' + e.message);
