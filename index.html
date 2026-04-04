@@ -1039,7 +1039,7 @@
 <script>
     // 后端API地址，已配置为你的Worker地址
     const API_BASE = "https://xiaohuiqiu-api.531976182.workers.dev";
-    const SESSION_PASSWORD_KEY = "xiaohuiqiu_session_password";
+    const PASSWORD_KEY = "xiaohuiqiu_admin_password";
 
     const DEFAULT_DATA = {
         e5Cpu: [
@@ -1159,8 +1159,8 @@
     // 密码验证函数
     function verifyPassword() {
         const password = adminPasswordInput.value;
-        // 把密码存到sessionStorage，关闭页面就失效，更安全
-        sessionStorage.setItem(SESSION_PASSWORD_KEY, password);
+        // 把密码存到localStorage，刷新页面也不会丢失
+        localStorage.setItem(PASSWORD_KEY, password);
         passwordModal.classList.remove('active');
         adminPasswordInput.value = '';
         switchPage(adminPage);
@@ -1174,7 +1174,7 @@
 
     // 通用保存数据到后端的函数
     async function saveDataToBackend() {
-        const password = sessionStorage.getItem(SESSION_PASSWORD_KEY);
+        const password = localStorage.getItem(PASSWORD_KEY);
         if (!password) {
             alert('请先登录管理员账号！');
             return false;
@@ -1208,7 +1208,7 @@
         const oldPassword = document.getElementById('oldPasswordInput').value;
         const newPassword = document.getElementById('newPasswordInput').value;
         const confirmPassword = document.getElementById('confirmPasswordInput').value;
-        const currentPassword = sessionStorage.getItem(SESSION_PASSWORD_KEY);
+        const currentPassword = localStorage.getItem(PASSWORD_KEY);
 
         if(oldPassword !== currentPassword) {
             alert('当前密码错误！');
@@ -1236,8 +1236,8 @@
             });
             const result = await response.json();
             if (result.success) {
-                // 更新session里的密码
-                sessionStorage.setItem(SESSION_PASSWORD_KEY, newPassword);
+                // 更新本地存储的密码
+                localStorage.setItem(PASSWORD_KEY, newPassword);
                 document.getElementById('oldPasswordInput').value = '';
                 document.getElementById('newPasswordInput').value = '';
                 document.getElementById('confirmPasswordInput').value = '';
