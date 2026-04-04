@@ -489,7 +489,7 @@
 
         @media (max-width: 768px) {
             .hero {
-                height: 40vh !important;
+                height: 40vh;
                 padding: 0 15px;
             }
             .hero-content h1 {
@@ -734,7 +734,7 @@
             <h4>一、装机前准备</h4>
             <ul>
                 <li>准备工具：十字螺丝刀、防静电手套/手环、扎带、硅脂</li>
-                <li>配件核对：CPU、主板、内存、显卡、硬盘、电源、机箱、散热</li>
+                <li>配件核对：CPU、主板、内存、显卡、硬盘、电源、机箱</li>
                 <li>防静电：操作前摸一下金属物体释放静电，避免击穿硬件</li>
             </ul>
 
@@ -1037,509 +1037,1062 @@
 </div>
 
 <script>
-const API_BASE = 'https://api.lingrangxiao.de5.net';
+    // 后端API地址，已配置为你的Worker地址
+    const API_BASE = "https://xiaohuiqiu-api.531976182.workers.dev";
+    const SESSION_PASSWORD_KEY = "xiaohuiqiu_session_password";
 
-const DEFAULT_DATA = {
-    e5Cpu: [
-        { name: "E5 2673 V3", price: 180, gen: "v3" },
-        { name: "E5 2650 V2", price: 80, gen: "v2" },
-        { name: "E5 2689 V3", price: 120, gen: "v3" },
-        { name: "E5 2666 V3", price: 260, gen: "v3" },
-        { name: "E5 2696 V3", price: 290, gen: "v3" }
-    ],
-    e5Board: [
-        { name: "X99 DDR3 主板", price: 320, gen: "v3,v4", ramType: "DDR3", freq: ["1333MHz","1600MHz"] },
-        { name: "X99 DDR4 主板", price: 550, gen: "v3,v4", ramType: "DDR4", freq: ["2133MHz","2400MHz"] },
-        { name: "X79 主板", price: 450, gen: "v2", ramType: "DDR3", freq: ["1333MHz","1600MHz"] }
-    ],
-    coreCpu: [
-        { name: "i3-12100", price: 880, gen: "12代" },
-        { name: "i5-12400F", price: 1350, gen: "12代" },
-        { name: "E3-1231 V3", price: 350, gen: "E3" }
-    ],
-    coreBoard: [
-        { name: "H610 主板", price: 780, gen: "12代", ramType: "DDR4", freq: ["3200MHz"] },
-        { name: "B85 主板", price: 280, gen: "E3", ramType: "DDR3", freq: ["1333MHz","1600MHz"] }
-    ],
-    memory: [
-        { name: "16G ECC", price: 350, type: "ECC" },
-        { name: "32G ECC", price: 680, type: "ECC" },
-        { name: "16G DDR4", price: 360, type: "DDR4" },
-        { name: "32G DDR4", price: 680, type: "DDR4" }
-    ],
-    gpu: [
-        { name: "无显卡", price: 0 },
-        { name: "GTX 1060 3G", price: 950 },
-        { name: "RTX 3060", price: 2800 }
-    ],
-    disk: [
-        { name: "240G SSD", price: 320 },
-        { name: "500G NVMe", price: 850 }
-    ],
-    power: [
-        { name: "400W 铜牌", price: 180 },
-        { name: "550W 银牌", price: 280 }
-    ],
-    case: [
-        { name: "办公机箱", price: 150 },
-        { name: "电竞机箱", price: 280 }
-    ],
-    serviceFee: 150,
-    recommends: [
-        {
-            name: "性价比游戏配置", platform: "core", badge: "推荐",
-            config: { cpu: "i5-12400F", board: "H610 主板", memory: "16G DDR4", gpu: "RTX 3060", disk: "500G NVMe", power: "550W 银牌", case: "电竞机箱" }
-        },
-        {
-            name: "工作室多开配置", platform: "e5", badge: "多开",
-            config: { cpu: "E5 2696 V3", board: "X99 DDR4 主板", memory: "32G ECC", gpu: "无显卡", disk: "240G SSD", power: "400W 铜牌", case: "办公机箱" }
-        }
-    ]
-};
-
-let APP_DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
-let currentAdminPassword = null;
-
-async function fetchData() {
-    try {
-        const res = await fetch(`${API_BASE}/api/data`);
-        const result = await res.json();
-        if (result.success && result.data) {
-            APP_DATA = result.data;
-            return true;
-        }
-    } catch (e) {}
-    APP_DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
-    return true;
-}
-
-async function saveDataToBackend() {
-    if (!currentAdminPassword) return false;
-    try {
-        const res = await fetch(`${API_BASE}/api/data`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: APP_DATA, password: currentAdminPassword })
-        });
-        const r = await res.json();
-        return r.success;
-    } catch (e) {
-        return false;
-    }
-}
-
-const passwordModal = document.getElementById('passwordModal');
-const adminPasswordInput = document.getElementById('adminPasswordInput');
-const verifyPasswordBtn = document.getElementById('verifyPasswordBtn');
-let clickCount = 0;
-document.querySelector('.hero-content h1').addEventListener('click', () => {
-    clickCount++;
-    if (clickCount >= 5) {
-        clickCount = 0;
-        passwordModal.classList.add('active');
-    }
-});
-
-verifyPasswordBtn.addEventListener('click', async () => {
-    const pwd = adminPasswordInput.value;
-    try {
-        const res = await fetch(`${API_BASE}/api/auth`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password: pwd })
-        });
-        const r = await res.json();
-        if (r.success) {
-            currentAdminPassword = pwd;
-            passwordModal.classList.remove('active');
-            switchPage(adminPage);
-            renderAllAdminPanels();
-        } else {
-            alert('密码错误');
-        }
-    } catch (e) {
-        alert('网络错误');
-    }
-});
-
-async function changePassword() {
-    const old = document.getElementById('oldPasswordInput').value;
-    const n = document.getElementById('newPasswordInput').value;
-    const c = document.getElementById('confirmPasswordInput').value;
-    if (old !== currentAdminPassword) return alert('当前密码错误');
-    if (!n || n.length < 6) return alert('密码至少6位');
-    if (n !== c) return alert('两次密码不一致');
-    try {
-        const res = await fetch(`${API_BASE}/api/password`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ oldPassword: old, newPassword: n })
-        });
-        const r = await res.json();
-        if (r.success) {
-            currentAdminPassword = n;
-            alert('修改成功');
-        } else {
-            alert('失败');
-        }
-    } catch (e) {}
-}
-
-const allPages = document.querySelectorAll('.page');
-const homePage = document.getElementById('homePage');
-const e5ConfigPage = document.getElementById('e5ConfigPage');
-const coreConfigPage = document.getElementById('coreConfigPage');
-const guidePage = document.getElementById('guidePage');
-const commentPage = document.getElementById('commentPage');
-const adminPage = document.getElementById('adminPage');
-
-function switchPage(p) {
-    allPages.forEach(x => x.classList.remove('active'));
-    p.classList.add('active');
-}
-
-document.getElementById('e5Card').onclick = () => switchPage(e5ConfigPage);
-document.getElementById('coreCard').onclick = () => switchPage(coreConfigPage);
-document.getElementById('guideCard').onclick = () => switchPage(guidePage);
-document.getElementById('commentCard').onclick = () => switchPage(commentPage);
-document.getElementById('backHomeFromE5').onclick = () => switchPage(homePage);
-document.getElementById('backHomeFromCore').onclick = () => switchPage(homePage);
-document.getElementById('backHomeFromGuide').onclick = () => switchPage(homePage);
-document.getElementById('backHomeFromComment').onclick = () => switchPage(homePage);
-document.getElementById('adminBackBtn').onclick = () => switchPage(homePage);
-
-document.querySelectorAll('.sidebar-item').forEach(i => {
-    i.onclick = () => {
-        document.querySelectorAll('.sidebar-item').forEach(x => x.classList.remove('active'));
-        document.querySelectorAll('.content-panel').forEach(x => x.classList.remove('active'));
-        i.classList.add('active');
-        document.getElementById(i.dataset.panel + 'Panel').classList.add('active');
+    const DEFAULT_DATA = {
+        e5Cpu: [
+            { name: "E5 2673 V3", price: 180, gen: "v3" },
+            { name: "E5 2650 V2", price: 80, gen: "v2" },
+            { name: "E5 2689 V3", price: 120, gen: "v3" },
+            { name: "E5 2666 V3", price: 260, gen: "v3" },
+            { name: "E5 2696 V3", price: 290, gen: "v3" }
+        ],
+        e5Board: [
+            { name: "X99 DDR3 主板 (科脑)", price: 320, gen: "v3,v4", ramType: "DDR3", freq: ["1333MHz", "1600MHz"] },
+            { name: "X99 DDR4 主板 (华南金牌)", price: 550, gen: "v3,v4", ramType: "DDR4", freq: ["2133MHz", "2400MHz"] },
+            { name: "X79 主板 (华南金牌)", price: 450, gen: "v2", ramType: "DDR3", freq: ["1333MHz", "1600MHz"] }
+        ],
+        coreCpu: [
+            { name: "i3-12100", price: 880, gen: "12代" },
+            { name: "i5-12400F", price: 1350, gen: "12代" },
+            { name: "i7-13700KF", price: 2980, gen: "13代" },
+            { name: "E3-1231 V3", price: 350, gen: "E3" },
+            { name: "i5-10400F", price: 750, gen: "10代" }
+        ],
+        coreBoard: [
+            { name: "H610 主板", price: 780, gen: "12代,13代", ramType: "DDR4", freq: ["3200MHz"] },
+            { name: "B760 主板", price: 1250, gen: "12代,13代", ramType: "DDR4", freq: ["3200MHz", "3600MHz"] },
+            { name: "B85 主板", price: 280, gen: "E3", ramType: "DDR3", freq: ["1333MHz", "1600MHz"] },
+            { name: "H410 主板", price: 520, gen: "10代", ramType: "DDR4", freq: ["2666MHz"] }
+        ],
+        memory: [
+            { name: "16G (8+8) ECC REG", price: 350, type: "ECC" },
+            { name: "32G (16+16) ECC REG", price: 680, type: "ECC" },
+            { name: "16G (8+8) DDR4", price: 360, type: "DDR4" },
+            { name: "32G (16+16) DDR4", price: 680, type: "DDR4" }
+        ],
+        gpu: [
+            { name: "无显卡", price: 0 },
+            { name: "GTX 1060 3G", price: 950 },
+            { name: "GTX 1660", price: 1800 },
+            { name: "RTX 3060", price: 2800 },
+            { name: "RTX 3060Ti", price: 4200 }
+        ],
+        disk: [
+            { name: "240G SATA SSD", price: 320 },
+            { name: "500G NVMe SSD", price: 850 },
+            { name: "1TB NVMe SSD", price: 850 }
+        ],
+        power: [
+            { name: "400W 铜牌电源", price: 180 },
+            { name: "550W 银牌电源", price: 280 },
+            { name: "600W 金牌电源", price: 380 }
+        ],
+        case: [
+            { name: "标准办公机箱", price: 150 },
+            { name: "电竞侧透机箱", price: 280 }
+        ],
+        serviceFee: 150,
+        recommends: [
+            { 
+                name: "性价比游戏推荐", 
+                platform: "core", 
+                badge: "性价比首选",
+                config: {
+                    cpu: "i5-12400F",
+                    board: "B760 主板",
+                    memory: "16G (8+8) DDR4",
+                    gpu: "RTX 3060",
+                    disk: "500G NVMe SSD",
+                    power: "550W 银牌电源",
+                    case: "电竞侧透机箱"
+                }
+            },
+            { 
+                name: "工作室多开推荐", 
+                platform: "e5", 
+                badge: "多开神器",
+                config: {
+                    cpu: "E5 2696 V3",
+                    board: "X99 DDR4 主板 (华南金牌)",
+                    memory: "32G (16+16) ECC REG",
+                    gpu: "无显卡",
+                    disk: "240G SATA SSD",
+                    power: "600W 金牌电源",
+                    case: "标准办公机箱"
+                }
+            },
+            { 
+                name: "办公家用推荐", 
+                platform: "core", 
+                badge: "稳定之选",
+                config: {
+                    cpu: "i3-12100",
+                    board: "H610 主板",
+                    memory: "16G (8+8) DDR4",
+                    gpu: "无显卡",
+                    disk: "500G NVMe SSD",
+                    power: "400W 铜牌电源",
+                    case: "标准办公机箱"
+                }
+            }
+        ]
     };
-});
 
-function renderRecommends() {
-    const g = document.getElementById('recommendGrid');
-    g.innerHTML = '';
-    APP_DATA.recommends.forEach(r => {
-        const d = document.createElement('div');
-        d.className = 'config-card';
-        d.innerHTML = `<div class="recommend-badge">${r.badge}</div><h3>${r.name}</h3><p>点击一键填充</p>`;
-        d.onclick = () => {
-            r.platform === 'e5' ? switchPage(e5ConfigPage) : switchPage(coreConfigPage);
-            setTimeout(() => autoFill(r.platform, r.config), 100);
-        };
-        g.appendChild(d);
+    let APP_DATA = DEFAULT_DATA; // 默认数据，加载后会从后端覆盖
+
+    const passwordModal = document.getElementById('passwordModal');
+    const adminPasswordInput = document.getElementById('adminPasswordInput');
+    const verifyPasswordBtn = document.getElementById('verifyPasswordBtn');
+
+    let clickCount = 0;
+    document.querySelector('.hero-content h1').addEventListener('click', () => {
+        clickCount++;
+        if(clickCount >= 5) {
+            clickCount = 0;
+            passwordModal.classList.add('active');
+        }
     });
-}
 
-function autoFill(p, cfg) {
-    const cpu = document.getElementById(p + '_cpuSelect');
-    for (let i = 0; i < cpu.options.length; i++) {
-        if (cpu.options[i].dataset.name === cfg.cpu) cpu.selectedIndex = i;
+    // 密码验证函数
+    function verifyPassword() {
+        const password = adminPasswordInput.value;
+        // 把密码存到sessionStorage，关闭页面就失效，更安全
+        sessionStorage.setItem(SESSION_PASSWORD_KEY, password);
+        passwordModal.classList.remove('active');
+        adminPasswordInput.value = '';
+        switchPage(adminPage);
+        renderAllAdminPanels();
     }
-    p === 'e5' ? updateE5Boards() : updateCoreBoards();
-    setTimeout(() => {
-        const b = document.getElementById(p + '_boardSelect');
-        for (let i = 0; i < b.options.length; i++) if (b.options[i].dataset.name === cfg.board) b.selectedIndex = i;
-        p === 'e5' ? updateE5Ram() : updateCoreRam();
-        const m = document.getElementById(p + '_memorySelect');
-        for (let i = 0; i < m.options.length; i++) if (m.options[i].dataset.name === cfg.memory) m.selectedIndex = i;
-        const g = document.getElementById(p + '_gpuSelect');
-        for (let i = 0; i < g.options.length; i++) if (g.options[i].dataset.name === cfg.gpu) g.selectedIndex = i;
-        const d = document.getElementById(p + '_diskSelect');
-        for (let i = 0; i < d.options.length; i++) if (d.options[i].dataset.name === cfg.disk) d.selectedIndex = i;
-        const pw = document.getElementById(p + '_powerSelect');
-        for (let i = 0; i < pw.options.length; i++) if (pw.options[i].dataset.name === cfg.power) pw.selectedIndex = i;
-        const c = document.getElementById(p + '_caseSelect');
-        for (let i = 0; i < c.options.length; i++) if (c.options[i].dataset.name === cfg.case) c.selectedIndex = i;
-        p === 'e5' ? calculateTotalE5() : calculateTotalCore();
-    }, 100);
-}
 
-function renderE5Cpu() {
-    const s = document.getElementById('e5_cpuSelect');
-    s.innerHTML = '';
-    APP_DATA.e5Cpu.forEach(i => {
-        const o = document.createElement('option');
-        o.value = i.price; o.dataset.name = i.name; o.dataset.gen = i.gen;
-        o.textContent = i.name + ' - ¥' + i.price;
-        s.appendChild(o);
+    verifyPasswordBtn.addEventListener('click', verifyPassword);
+    adminPasswordInput.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter') verifyPassword();
     });
-    updateE5Boards();
-}
 
-function updateE5Boards() {
-    const s = document.getElementById('e5_cpuSelect');
-    const gen = s.options[s.selectedIndex].dataset.gen;
-    const b = document.getElementById('e5_boardSelect');
-    b.innerHTML = '';
-    APP_DATA.e5Board.filter(i => i.gen.includes(gen)).forEach(i => {
-        const o = document.createElement('option');
-        o.value = i.price; o.dataset.name = i.name; o.dataset.ramType = i.ramType; o.dataset.freq = JSON.stringify(i.freq);
-        o.textContent = i.name + ' - ¥' + i.price;
-        b.appendChild(o);
-    });
-    updateE5Ram();
-    calculateTotalE5();
-}
+    // 通用保存数据到后端的函数
+    async function saveDataToBackend() {
+        const password = sessionStorage.getItem(SESSION_PASSWORD_KEY);
+        if (!password) {
+            alert('请先登录管理员账号！');
+            return false;
+        }
+        try {
+            const response = await fetch(`${API_BASE}/api/update-data`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    data: APP_DATA,
+                    password: password,
+                }),
+            });
+            const result = await response.json();
+            if (result.success) {
+                return true;
+            } else {
+                alert('❌ 保存失败：' + result.message);
+                return false;
+            }
+        } catch (e) {
+            alert('❌ 网络错误，请稍后重试：' + e.message);
+            return false;
+        }
+    }
 
-function updateE5Ram() {
-    const b = document.getElementById('e5_boardSelect');
-    const f = JSON.parse(b.options[b.selectedIndex].dataset.freq);
-    const t = b.options[b.selectedIndex].dataset.ramType;
-    const s = document.getElementById('e5_ramFreqSelect');
-    s.innerHTML = '';
-    f.forEach(x => {
-        const o = document.createElement('option');
-        o.textContent = t + ' ' + x;
-        s.appendChild(o);
-    });
-    calculateTotalE5();
-}
+    // 修改密码函数
+    async function changePassword() {
+        const oldPassword = document.getElementById('oldPasswordInput').value;
+        const newPassword = document.getElementById('newPasswordInput').value;
+        const confirmPassword = document.getElementById('confirmPasswordInput').value;
+        const currentPassword = sessionStorage.getItem(SESSION_PASSWORD_KEY);
 
-function renderCoreCpu() {
-    const s = document.getElementById('core_cpuSelect');
-    s.innerHTML = '';
-    APP_DATA.coreCpu.forEach(i => {
-        const o = document.createElement('option');
-        o.value = i.price; o.dataset.name = i.name; o.dataset.gen = i.gen;
-        o.textContent = i.name + ' - ¥' + i.price;
-        s.appendChild(o);
-    });
-    updateCoreBoards();
-}
+        if(oldPassword !== currentPassword) {
+            alert('当前密码错误！');
+            return;
+        }
+        if(!newPassword || newPassword.length < 6) {
+            alert('新密码至少6位！');
+            return;
+        }
+        if(newPassword !== confirmPassword) {
+            alert('两次输入的新密码不一致！');
+            return;
+        }
 
-function updateCoreBoards() {
-    const s = document.getElementById('core_cpuSelect');
-    const gen = s.options[s.selectedIndex].dataset.gen;
-    const b = document.getElementById('core_boardSelect');
-    b.innerHTML = '';
-    APP_DATA.coreBoard.filter(i => i.gen.includes(gen)).forEach(i => {
-        const o = document.createElement('option');
-        o.value = i.price; o.dataset.name = i.name; o.dataset.ramType = i.ramType; o.dataset.freq = JSON.stringify(i.freq);
-        o.textContent = i.name + ' - ¥' + i.price;
-        b.appendChild(o);
-    });
-    updateCoreRam();
-    calculateTotalCore();
-}
+        try {
+            const response = await fetch(`${API_BASE}/api/update-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    oldPassword: oldPassword,
+                    newPassword: newPassword,
+                }),
+            });
+            const result = await response.json();
+            if (result.success) {
+                // 更新session里的密码
+                sessionStorage.setItem(SESSION_PASSWORD_KEY, newPassword);
+                document.getElementById('oldPasswordInput').value = '';
+                document.getElementById('newPasswordInput').value = '';
+                document.getElementById('confirmPasswordInput').value = '';
+                alert('✅ 密码修改成功！请牢记新密码');
+            } else {
+                alert('❌ 密码修改失败：' + result.message);
+            }
+        } catch (e) {
+            alert('❌ 网络错误，请稍后重试：' + e.message);
+        }
+    }
 
-function updateCoreRam() {
-    const b = document.getElementById('core_boardSelect');
-    const f = JSON.parse(b.options[b.selectedIndex].dataset.freq);
-    const t = b.options[b.selectedIndex].dataset.ramType;
-    const s = document.getElementById('core_ramFreqSelect');
-    s.innerHTML = '';
-    f.forEach(x => {
-        const o = document.createElement('option');
-        o.textContent = t + ' ' + x;
-        s.appendChild(o);
-    });
-    calculateTotalCore();
-}
+    const allPages = document.querySelectorAll('.page');
+    const homePage = document.getElementById('homePage');
+    const e5ConfigPage = document.getElementById('e5ConfigPage');
+    const coreConfigPage = document.getElementById('coreConfigPage');
+    const guidePage = document.getElementById('guidePage');
+    const commentPage = document.getElementById('commentPage');
+    const adminPage = document.getElementById('adminPage');
 
-function renderMem() {
-    const e = document.getElementById('e5_memorySelect');
-    const c = document.getElementById('core_memorySelect');
-    e.innerHTML = ''; c.innerHTML = '';
-    APP_DATA.memory.filter(i => i.type === 'ECC').forEach(i => {
-        const o = document.createElement('option');
-        o.value = i.price; o.dataset.name = i.name;
-        o.textContent = i.name + ' - ¥' + i.price;
-        e.appendChild(o);
-    });
-    APP_DATA.memory.filter(i => i.type === 'DDR4').forEach(i => {
-        const o = document.createElement('option');
-        o.value = i.price; o.dataset.name = i.name;
-        o.textContent = i.name + ' - ¥' + i.price;
-        c.appendChild(o);
-    });
-}
+    const e5Card = document.getElementById('e5Card');
+    const coreCard = document.getElementById('coreCard');
+    const guideCard = document.getElementById('guideCard');
+    const commentCard = document.getElementById('commentCard');
 
-function renderGpu() {
-    const e = document.getElementById('e5_gpuSelect');
-    const c = document.getElementById('core_gpuSelect');
-    e.innerHTML = ''; c.innerHTML = '';
-    APP_DATA.gpu.forEach(i => {
-        const o = document.createElement('option');
-        o.value = i.price; o.dataset.name = i.name;
-        o.textContent = i.name + ' - ¥' + i.price;
-        e.appendChild(o);
-    });
-    const o = document.createElement('option');
-    o.value = 0; o.dataset.name = '核芯显卡'; o.textContent = '核芯显卡 - ¥0';
-    c.appendChild(o);
-    APP_DATA.gpu.forEach(i => {
-        const opt = document.createElement('option');
-        opt.value = i.price; opt.dataset.name = i.name;
-        opt.textContent = i.name + ' - ¥' + i.price;
-        c.appendChild(opt);
-    });
-}
+    const backHomeFromE5 = document.getElementById('backHomeFromE5');
+    const backHomeFromCore = document.getElementById('backHomeFromCore');
+    const backHomeFromGuide = document.getElementById('backHomeFromGuide');
+    const backHomeFromComment = document.getElementById('backHomeFromComment');
+    const adminBackBtn = document.getElementById('adminBackBtn');
 
-function renderDisk() {
-    const e = document.getElementById('e5_diskSelect');
-    const c = document.getElementById('core_diskSelect');
-    e.innerHTML = ''; c.innerHTML = '';
-    APP_DATA.disk.forEach(i => {
-        const o = document.createElement('option');
-        o.value = i.price; o.dataset.name = i.name;
-        o.textContent = i.name + ' - ¥' + i.price;
-        e.appendChild(o);
-        c.appendChild(o.cloneNode(true));
-    });
-}
+    function switchPage(targetPage) {
+        allPages.forEach(page => page.classList.remove('active'));
+        targetPage.classList.add('active');
+        window.scrollTo(0, 0);
+    }
 
-function renderPower() {
-    const e = document.getElementById('e5_powerSelect');
-    const c = document.getElementById('core_powerSelect');
-    e.innerHTML = ''; c.innerHTML = '';
-    APP_DATA.power.forEach(i => {
-        const o = document.createElement('option');
-        o.value = i.price; o.dataset.name = i.name;
-        o.textContent = i.name + ' - ¥' + i.price;
-        e.appendChild(o);
-        c.appendChild(o.cloneNode(true));
-    });
-}
+    function goToHome() {
+        switchPage(homePage);
+    }
 
-function renderCase() {
-    const e = document.getElementById('e5_caseSelect');
-    const c = document.getElementById('core_caseSelect');
-    e.innerHTML = ''; c.innerHTML = '';
-    APP_DATA.case.forEach(i => {
-        const o = document.createElement('option');
-        o.value = i.price; o.dataset.name = i.name;
-        o.textContent = i.name + ' - ¥' + i.price;
-        e.appendChild(o);
-        c.appendChild(o.cloneNode(true));
-    });
-}
+    e5Card.addEventListener('click', () => switchPage(e5ConfigPage));
+    coreCard.addEventListener('click', () => switchPage(coreConfigPage));
+    guideCard.addEventListener('click', () => switchPage(guidePage));
+    commentCard.addEventListener('click', () => switchPage(commentPage));
+    adminBackBtn.addEventListener('click', goToHome);
 
-function calculateTotalE5() {
-    const cpu = +document.getElementById('e5_cpuSelect').value || 0;
-    const b = +document.getElementById('e5_boardSelect').value || 0;
-    const m = +document.getElementById('e5_memorySelect').value || 0;
-    const g = +document.getElementById('e5_gpuSelect').value || 0;
-    const d = +document.getElementById('e5_diskSelect').value || 0;
-    const p = +document.getElementById('e5_powerSelect').value || 0;
-    const c = +document.getElementById('e5_caseSelect').value || 0;
-    const t = cpu + b + m + g + d + p + c;
-    document.getElementById('e5_partsTotal').textContent = '¥' + t.toFixed(2);
-    document.getElementById('e5_finalPrice').textContent = '¥' + (t + APP_DATA.serviceFee).toFixed(2);
-}
+    backHomeFromE5.addEventListener('click', goToHome);
+    backHomeFromCore.addEventListener('click', goToHome);
+    backHomeFromGuide.addEventListener('click', goToHome);
+    backHomeFromComment.addEventListener('click', goToHome);
 
-function calculateTotalCore() {
-    const cpu = +document.getElementById('core_cpuSelect').value || 0;
-    const b = +document.getElementById('core_boardSelect').value || 0;
-    const m = +document.getElementById('core_memorySelect').value || 0;
-    const g = +document.getElementById('core_gpuSelect').value || 0;
-    const d = +document.getElementById('core_diskSelect').value || 0;
-    const p = +document.getElementById('core_powerSelect').value || 0;
-    const c = +document.getElementById('core_caseSelect').value || 0;
-    const t = cpu + b + m + g + d + p + c;
-    document.getElementById('core_partsTotal').textContent = '¥' + t.toFixed(2);
-    document.getElementById('core_finalPrice').textContent = '¥' + (t + APP_DATA.serviceFee).toFixed(2);
-}
-
-document.getElementById('e5_copyBtn').onclick = () => {
-    const t = `配置单：CPU ${document.getElementById('e5_cpuSelect').options[document.getElementById('e5_cpuSelect').selectedIndex].dataset.name}`;
-    navigator.clipboard.writeText(t).then(() => alert('已复制'));
-};
-
-document.getElementById('core_copyBtn').onclick = () => {
-    const t = `配置单：CPU ${document.getElementById('core_cpuSelect').options[document.getElementById('core_cpuSelect').selectedIndex].dataset.name}`;
-    navigator.clipboard.writeText(t).then(() => alert('已复制'));
-};
-
-function renderAllAdminPanels() {
-    renderAdminTable('e5CpuTable', APP_DATA.e5Cpu, ['name','price','gen']);
-    renderAdminTable('e5BoardTable', APP_DATA.e5Board, ['name','price','gen','ramType']);
-    renderAdminTable('coreCpuTable', APP_DATA.coreCpu, ['name','price','gen']);
-    renderAdminTable('coreBoardTable', APP_DATA.coreBoard, ['name','price','gen','ramType']);
-    renderAdminTable('memoryTable', APP_DATA.memory, ['name','price','type']);
-    renderAdminTable('gpuTable', APP_DATA.gpu, ['name','price']);
-    renderAdminTable('diskTable', APP_DATA.disk, ['name','price']);
-    renderAdminTable('powerTable', APP_DATA.power, ['name','price']);
-    renderAdminTable('caseTable', APP_DATA.case, ['name','price']);
-}
-
-function renderAdminTable(tid, data, fields) {
-    const t = document.getElementById(tid);
-    const b = t.querySelector('tbody');
-    b.innerHTML = '';
-    data.forEach((i, idx) => {
-        const tr = document.createElement('tr');
-        fields.forEach(f => {
-            const td = document.createElement('td');
-            const inp = document.createElement('input');
-            inp.className = f === 'price' ? 'price-input' : 'text-input';
-            inp.value = i[f];
-            inp.dataset.index = idx;
-            inp.dataset.field = f;
-            td.appendChild(inp);
-            tr.appendChild(td);
+    document.querySelectorAll('.sidebar-item').forEach(item => {
+        item.addEventListener('click', () => {
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            document.querySelectorAll('.content-panel').forEach(p => p.classList.remove('active'));
+            item.classList.add('active');
+            document.getElementById(`${item.dataset.panel}Panel`).classList.add('active');
         });
-        const dtd = document.createElement('td');
-        const btn = document.createElement('button');
-        btn.className = 'delete-btn';
-        btn.textContent = '删除';
-        btn.onclick = () => {
-            data.splice(idx, 1);
-            renderAdminTable(tid, data, fields);
-        };
-        dtd.appendChild(btn);
-        tr.appendChild(dtd);
-        b.appendChild(tr);
     });
-}
 
-function addItem(t) {
-    const ni = { name: '新品', price: 100, gen: 'v3', ramType: 'DDR4', type: 'DDR4' };
-    APP_DATA[t].push(ni);
-    renderAllAdminPanels();
-}
+    function renderRecommends() {
+        const grid = document.getElementById('recommendGrid');
+        grid.innerHTML = '';
+        APP_DATA.recommends.forEach((rec, index) => {
+            const card = document.createElement('div');
+            card.className = 'config-card';
+            card.innerHTML = `
+                <div class="recommend-badge">${rec.badge}</div>
+                <h3>${rec.name}</h3>
+                <p>点击一键自动填充配置，省心省力！</p>
+            `;
+            card.addEventListener('click', () => applyRecommend(rec));
+            grid.appendChild(card);
+        });
+    }
 
-async function saveAdminData(t) {
-    const ipts = document.querySelectorAll(`#${t}Table input`);
-    ipts.forEach(i => {
-        const idx = +i.dataset.index;
-        const f = i.dataset.field;
-        APP_DATA[t][idx][f] = f === 'price' ? +i.value : i.value;
+    function applyRecommend(rec) {
+        if(rec.platform === 'e5') {
+            switchPage(e5ConfigPage);
+            setTimeout(() => autoFillConfig('e5', rec.config), 100);
+        } else {
+            switchPage(coreConfigPage);
+            setTimeout(() => autoFillConfig('core', rec.config), 100);
+        }
+    }
+
+    function autoFillConfig(prefix, config) {
+        const cpuSelect = document.getElementById(`${prefix}_cpuSelect`);
+        if(!cpuSelect.options.length) return;
+        for(let i=0; i<cpuSelect.options.length; i++) {
+            if(cpuSelect.options[i].dataset.name === config.cpu) {
+                cpuSelect.selectedIndex = i;
+                break;
+            }
+        }
+        
+        if(prefix === 'e5') updateE5Boards();
+        else updateCoreBoards();
+
+        setTimeout(() => {
+            const boardSelect = document.getElementById(`${prefix}_boardSelect`);
+            if(!boardSelect.options.length) return;
+            for(let i=0; i<boardSelect.options.length; i++) {
+                if(boardSelect.options[i].dataset.name === config.board) {
+                    boardSelect.selectedIndex = i;
+                    break;
+                }
+            }
+            
+            if(prefix === 'e5') updateE5Ram();
+            else updateCoreRam();
+
+            const memorySelect = document.getElementById(`${prefix}_memorySelect`);
+            if(memorySelect.options.length) {
+                for(let i=0; i<memorySelect.options.length; i++) {
+                    if(memorySelect.options[i].dataset.name === config.memory) {
+                        memorySelect.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            const gpuSelect = document.getElementById(`${prefix}_gpuSelect`);
+            if(gpuSelect.options.length) {
+                for(let i=0; i<gpuSelect.options.length; i++) {
+                    if(gpuSelect.options[i].dataset.name === config.gpu) {
+                        gpuSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            const diskSelect = document.getElementById(`${prefix}_diskSelect`);
+            if(diskSelect.options.length) {
+                for(let i=0; i<diskSelect.options.length; i++) {
+                    if(diskSelect.options[i].dataset.name === config.disk) {
+                        diskSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            const powerSelect = document.getElementById(`${prefix}_powerSelect`);
+            if(powerSelect.options.length) {
+                for(let i=0; i<powerSelect.options.length; i++) {
+                    if(powerSelect.options[i].dataset.name === config.power) {
+                        powerSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            const caseSelect = document.getElementById(`${prefix}_caseSelect`);
+            if(caseSelect.options.length) {
+                for(let i=0; i<caseSelect.options.length; i++) {
+                    if(caseSelect.options[i].dataset.name === config.case) {
+                        caseSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            if(prefix === 'e5') calculateTotalE5();
+            else calculateTotalCore();
+        }, 100);
+    }
+
+    function renderE5Cpu() {
+        const select = document.getElementById('e5_cpuSelect');
+        select.innerHTML = '';
+        APP_DATA.e5Cpu.forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item.price;
+            opt.dataset.gen = item.gen;
+            opt.dataset.name = item.name;
+            opt.textContent = `${item.name} - ¥${item.price}`;
+            select.appendChild(opt);
+        });
+        updateE5Boards();
+    }
+
+    function renderCoreCpu() {
+        const select = document.getElementById('core_cpuSelect');
+        select.innerHTML = '';
+        APP_DATA.coreCpu.forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item.price;
+            opt.dataset.gen = item.gen;
+            opt.dataset.name = item.name;
+            opt.textContent = `${item.name} - ¥${item.price}`;
+            select.appendChild(opt);
+        });
+        updateCoreBoards();
+    }
+
+    function renderE5Memory() {
+        const select = document.getElementById('e5_memorySelect');
+        select.innerHTML = '';
+        APP_DATA.memory.filter(item => item.type === 'ECC').forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item.price;
+            opt.dataset.name = item.name;
+            opt.textContent = `${item.name} - ¥${item.price}`;
+            select.appendChild(opt);
+        });
+    }
+
+    function renderCoreMemory() {
+        const select = document.getElementById('core_memorySelect');
+        select.innerHTML = '';
+        APP_DATA.memory.filter(item => item.type === 'DDR4').forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item.price;
+            opt.dataset.name = item.name;
+            opt.textContent = `${item.name} - ¥${item.price}`;
+            select.appendChild(opt);
+        });
+    }
+
+    function renderGpu() {
+        const e5Gpu = document.getElementById('e5_gpuSelect');
+        const coreGpu = document.getElementById('core_gpuSelect');
+        e5Gpu.innerHTML = '';
+        coreGpu.innerHTML = '';
+        
+        APP_DATA.gpu.forEach(item => {
+            const opt1 = document.createElement('option');
+            opt1.value = item.price;
+            opt1.dataset.name = item.name;
+            opt1.textContent = `${item.name} - ¥${item.price}`;
+            e5Gpu.appendChild(opt1);
+
+            if(item.name !== "无显卡") {
+                const opt2 = document.createElement('option');
+                opt2.value = item.price;
+                opt2.dataset.name = item.name;
+                opt2.textContent = `${item.name} - ¥${item.price}`;
+                coreGpu.appendChild(opt2);
+            }
+        });
+        
+        const coreOpt = document.createElement('option');
+        coreOpt.value = 0;
+        coreOpt.dataset.name = "核芯显卡";
+        coreOpt.textContent = "核芯显卡 - ¥0";
+        coreGpu.insertBefore(coreOpt, coreGpu.firstChild);
+    }
+
+    function renderDisk() {
+        const e5Disk = document.getElementById('e5_diskSelect');
+        const coreDisk = document.getElementById('core_diskSelect');
+        e5Disk.innerHTML = '';
+        coreDisk.innerHTML = '';
+        APP_DATA.disk.forEach(item => {
+            const opt1 = document.createElement('option');
+            opt1.value = item.price;
+            opt1.dataset.name = item.name;
+            opt1.textContent = `${item.name} - ¥${item.price}`;
+            e5Disk.appendChild(opt1);
+
+            const opt2 = document.createElement('option');
+            opt2.value = item.price;
+            opt2.dataset.name = item.name;
+            opt2.textContent = `${item.name} - ¥${item.price}`;
+            coreDisk.appendChild(opt2);
+        });
+    }
+
+    function renderPower() {
+        const e5Power = document.getElementById('e5_powerSelect');
+        const corePower = document.getElementById('core_powerSelect');
+        e5Power.innerHTML = '';
+        corePower.innerHTML = '';
+        APP_DATA.power.forEach(item => {
+            const opt1 = document.createElement('option');
+            opt1.value = item.price;
+            opt1.dataset.name = item.name;
+            opt1.textContent = `${item.name} - ¥${item.price}`;
+            e5Power.appendChild(opt1);
+
+            const opt2 = document.createElement('option');
+            opt2.value = item.price;
+            opt2.dataset.name = item.name;
+            opt2.textContent = `${item.name} - ¥${item.price}`;
+            corePower.appendChild(opt2);
+        });
+    }
+
+    function renderCase() {
+        const e5Case = document.getElementById('e5_caseSelect');
+        const coreCase = document.getElementById('core_caseSelect');
+        e5Case.innerHTML = '';
+        coreCase.innerHTML = '';
+        APP_DATA.case.forEach(item => {
+            const opt1 = document.createElement('option');
+            opt1.value = item.price;
+            opt1.dataset.name = item.name;
+            opt1.textContent = `${item.name} - ¥${item.price}`;
+            e5Case.appendChild(opt1);
+
+            const opt2 = document.createElement('option');
+            opt2.value = item.price;
+            opt2.dataset.name = item.name;
+            opt2.textContent = `${item.name} - ¥${item.price}`;
+            coreCase.appendChild(opt2);
+        });
+    }
+
+    function renderServiceFee() {
+        document.getElementById('e5_serviceFee').textContent = APP_DATA.serviceFee;
+        document.getElementById('core_serviceFee').textContent = APP_DATA.serviceFee;
+        document.getElementById('serviceFeeInput').value = APP_DATA.serviceFee;
+    }
+
+    function renderAllFrontData() {
+        renderE5Cpu();
+        renderCoreCpu();
+        renderE5Memory();
+        renderCoreMemory();
+        renderGpu();
+        renderDisk();
+        renderPower();
+        renderCase();
+        renderServiceFee();
+        renderRecommends();
+        calculateTotalE5();
+        calculateTotalCore();
+    }
+
+    const e5Cpu = document.getElementById('e5_cpuSelect');
+    const e5Board = document.getElementById('e5_boardSelect');
+    const e5RamFreq = document.getElementById('e5_ramFreqSelect');
+
+    function updateE5Boards() {
+        if(!e5Cpu?.options.length) return;
+        const gen = e5Cpu.options[e5Cpu.selectedIndex].dataset.gen;
+        const boards = APP_DATA.e5Board.filter(item => item.gen.includes(gen));
+        e5Board.innerHTML = '';
+        boards.forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item.price;
+            opt.dataset.name = item.name;
+            opt.dataset.ramType = item.ramType;
+            opt.dataset.freq = JSON.stringify(item.freq);
+            opt.textContent = `${item.name} - ¥${item.price}`;
+            e5Board.appendChild(opt);
+        });
+        updateE5Ram();
+        calculateTotalE5();
+    }
+
+    function updateE5Ram() {
+        if (!e5Board?.options.length) return;
+        const freqList = JSON.parse(e5Board.options[e5Board.selectedIndex].dataset.freq);
+        const ramType = e5Board.options[e5Board.selectedIndex].dataset.ramType;
+        e5RamFreq.innerHTML = '';
+        freqList.forEach(freq => {
+            const opt = document.createElement('option');
+            opt.value = 0;
+            opt.dataset.name = `${ramType} ${freq}`;
+            opt.textContent = `${ramType} ${freq}`;
+            e5RamFreq.appendChild(opt);
+        });
+        calculateTotalE5();
+    }
+
+    const coreCpu = document.getElementById('core_cpuSelect');
+    const coreBoard = document.getElementById('core_boardSelect');
+    const coreRamFreq = document.getElementById('core_ramFreqSelect');
+
+    function updateCoreBoards() {
+        if(!coreCpu?.options.length) return;
+        const gen = coreCpu.options[coreCpu.selectedIndex].dataset.gen;
+        const boards = APP_DATA.coreBoard.filter(item => item.gen.includes(gen));
+        coreBoard.innerHTML = '';
+        boards.forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item.price;
+            opt.dataset.name = item.name;
+            opt.dataset.ramType = item.ramType;
+            opt.dataset.freq = JSON.stringify(item.freq);
+            opt.textContent = `${item.name} - ¥${item.price}`;
+            coreBoard.appendChild(opt);
+        });
+        updateCoreRam();
+        calculateTotalCore();
+    }
+
+    function updateCoreRam() {
+        if (!coreBoard?.options.length) return;
+        const freqList = JSON.parse(coreBoard.options[coreBoard.selectedIndex].dataset.freq);
+        const ramType = coreBoard.options[coreBoard.selectedIndex].dataset.ramType;
+        coreRamFreq.innerHTML = '';
+        freqList.forEach(freq => {
+            const opt = document.createElement('option');
+            opt.value = 0;
+            opt.dataset.name = `${ramType} ${freq}`;
+            opt.textContent = `${ramType} ${freq}`;
+            coreRamFreq.appendChild(opt);
+        });
+        calculateTotalCore();
+    }
+
+    e5Cpu.addEventListener('change', updateE5Boards);
+    e5Board.addEventListener('change', updateE5Ram);
+    coreCpu.addEventListener('change', updateCoreBoards);
+    coreBoard.addEventListener('change', updateCoreRam);
+
+    function calculateTotalE5() {
+        const cpu = parseInt(e5Cpu.value) || 0;
+        const board = parseInt(e5Board.value) || 0;
+        const memory = parseInt(document.getElementById('e5_memorySelect').value) || 0;
+        const gpu = parseInt(document.getElementById('e5_gpuSelect').value) || 0;
+        const disk = parseInt(document.getElementById('e5_diskSelect').value) || 0;
+        const power = parseInt(document.getElementById('e5_powerSelect').value) || 0;
+        const case_ = parseInt(document.getElementById('e5_caseSelect').value) || 0;
+        
+        const total = cpu + board + memory + gpu + disk + power + case_;
+        document.getElementById('e5_partsTotal').textContent = `¥${total.toFixed(2)}`;
+        document.getElementById('e5_finalPrice').textContent = `¥${(total + APP_DATA.serviceFee).toFixed(2)}`;
+    }
+
+    function calculateTotalCore() {
+        const cpu = parseInt(coreCpu.value) || 0;
+        const board = parseInt(coreBoard.value) || 0;
+        const memory = parseInt(document.getElementById('core_memorySelect').value) || 0;
+        const gpu = parseInt(document.getElementById('core_gpuSelect').value) || 0;
+        const disk = parseInt(document.getElementById('core_diskSelect').value) || 0;
+        const power = parseInt(document.getElementById('core_powerSelect').value) || 0;
+        const case_ = parseInt(document.getElementById('core_caseSelect').value) || 0;
+        
+        const total = cpu + board + memory + gpu + disk + power + case_;
+        document.getElementById('core_partsTotal').textContent = `¥${total.toFixed(2)}`;
+        document.getElementById('core_finalPrice').textContent = `¥${(total + APP_DATA.serviceFee).toFixed(2)}`;
+    }
+
+    document.querySelectorAll('#e5ConfigPage .form-select').forEach(item => {
+        item.addEventListener('change', calculateTotalE5);
     });
-    await saveDataToBackend();
-    renderAllFront();
-    alert('保存成功');
-}
+    document.querySelectorAll('#coreConfigPage .form-select').forEach(item => {
+        item.addEventListener('change', calculateTotalCore);
+    });
 
-async function saveServiceFee() {
-    APP_DATA.serviceFee = +document.getElementById('serviceFeeInput').value;
-    await saveDataToBackend();
-    renderAllFront();
-    alert('保存成功');
-}
+    function copyConfig(prefix) {
+        const cpu = document.getElementById(`${prefix}_cpuSelect`);
+        const board = document.getElementById(`${prefix}_boardSelect`);
+        const ramFreq = document.getElementById(`${prefix}_ramFreqSelect`);
+        const memory = document.getElementById(`${prefix}_memorySelect`);
+        const gpu = document.getElementById(`${prefix}_gpuSelect`);
+        const disk = document.getElementById(`${prefix}_diskSelect`);
+        const power = document.getElementById(`${prefix}_powerSelect`);
+        const case_ = document.getElementById(`${prefix}_caseSelect`);
 
-function renderAllFront() {
-    renderE5Cpu();
-    renderCoreCpu();
-    renderMem();
-    renderGpu();
-    renderDisk();
-    renderPower();
-    renderCase();
-    renderRecommends();
-    calculateTotalE5();
-    calculateTotalCore();
-}
+        const text = `
+【小黑球装机铺】${prefix === 'e5' ? 'E5服务器' : '酷睿游戏'}配置单
+CPU：${cpu.options[cpu.selectedIndex].dataset.name}
+主板：${board.options[board.selectedIndex].dataset.name}
+内存：${ramFreq.options[ramFreq.selectedIndex].dataset.name} ${memory.options[memory.selectedIndex].dataset.name}
+显卡：${gpu.options[gpu.selectedIndex].dataset.name}
+硬盘：${disk.options[disk.selectedIndex].dataset.name}
+电源：${power.options[power.selectedIndex].dataset.name}
+机箱：${case_.options[case_.selectedIndex].dataset.name}
+配件总价：${document.getElementById(`${prefix}_partsTotal`).textContent}
+最终售价：${document.getElementById(`${prefix}_finalPrice`).textContent}
+        `.trim();
 
-function exportFullCode() {
-    alert('已使用云端存储，无需导出');
-}
+        navigator.clipboard.writeText(text).then(() => alert('✅ 完整配置已复制到剪贴板！'));
+    }
 
-window.onload = async () => {
-    await fetchData();
-    renderAllFront();
-};
+    document.getElementById('e5_copyBtn').onclick = () => copyConfig('e5');
+    document.getElementById('core_copyBtn').onclick = () => copyConfig('core');
+
+    function renderAllAdminPanels() {
+        renderAdminTable('e5CpuTable', APP_DATA.e5Cpu, ['name', 'price', 'gen']);
+        renderAdminTable('e5BoardTable', APP_DATA.e5Board, ['name', 'price', 'gen', 'ramType']);
+        renderAdminTable('coreCpuTable', APP_DATA.coreCpu, ['name', 'price', 'gen']);
+        renderAdminTable('coreBoardTable', APP_DATA.coreBoard, ['name', 'price', 'gen', 'ramType']);
+        renderAdminTable('memoryTable', APP_DATA.memory, ['name', 'price', 'type']);
+        renderAdminTable('gpuTable', APP_DATA.gpu, ['name', 'price']);
+        renderAdminTable('diskTable', APP_DATA.disk, ['name', 'price']);
+        renderAdminTable('powerTable', APP_DATA.power, ['name', 'price']);
+        renderAdminTable('caseTable', APP_DATA.case, ['name', 'price']);
+        renderRecommendTable();
+        renderServiceFee();
+    }
+
+    function renderAdminTable(tableId, data, fields) {
+        const table = document.getElementById(tableId);
+        const tbody = table.querySelector('tbody');
+        tbody.innerHTML = '';
+        data.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            fields.forEach(field => {
+                const td = document.createElement('td');
+                if(field === 'price') {
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'price-input';
+                    input.value = item[field];
+                    input.dataset.index = index;
+                    input.dataset.field = field;
+                    td.appendChild(input);
+                } else if(field === 'name' || field === 'gen' || field === 'ramType' || field === 'type') {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'text-input';
+                    input.value = item[field];
+                    input.dataset.index = index;
+                    input.dataset.field = field;
+                    td.appendChild(input);
+                } else {
+                    td.textContent = item[field];
+                }
+                tr.appendChild(td);
+            });
+            const tdDel = document.createElement('td');
+            const delBtn = document.createElement('button');
+            delBtn.className = 'delete-btn';
+            delBtn.textContent = '删除';
+            delBtn.onclick = () => deleteItem(tableId.replace('Table', ''), index);
+            tdDel.appendChild(delBtn);
+            tr.appendChild(tdDel);
+            tbody.appendChild(tr);
+        });
+    }
+
+    function addItem(type) {
+        const newItem = {};
+        if(type === 'e5Cpu' || type === 'coreCpu') {
+            newItem.name = '新CPU型号';
+            newItem.price = 1000;
+            newItem.gen = 'v3';
+        } else if(type === 'e5Board' || type === 'coreBoard') {
+            newItem.name = '新主板型号';
+            newItem.price = 500;
+            newItem.gen = '12代';
+            newItem.ramType = 'DDR4';
+            newItem.freq = ['3200MHz'];
+        } else if(type === 'memory') {
+            newItem.name = '新内存规格';
+            newItem.price = 300;
+            newItem.type = 'DDR4';
+        } else if(type === 'gpu') {
+            newItem.name = '新显卡型号';
+            newItem.price = 2000;
+        } else if(type === 'disk') {
+            newItem.name = '新硬盘规格';
+            newItem.price = 500;
+        } else if(type === 'power') {
+            newItem.name = '新电源规格';
+            newItem.price = 200;
+        } else if(type === 'case') {
+            newItem.name = '新机箱类型';
+            newItem.price = 150;
+        }
+        APP_DATA[type].push(newItem);
+        renderAllAdminPanels();
+    }
+
+    function deleteItem(type, index) {
+        if(confirm('确定要删除这个配件吗？')) {
+            APP_DATA[type].splice(index, 1);
+            renderAllAdminPanels();
+        }
+    }
+
+    async function saveAdminData(type) {
+        const table = document.getElementById(`${type}Table`);
+        const inputs = table.querySelectorAll('input');
+        inputs.forEach(input => {
+            const index = parseInt(input.dataset.index);
+            const field = input.dataset.field;
+            if(field === 'price') {
+                APP_DATA[type][index][field] = parseInt(input.value) || 0;
+            } else {
+                APP_DATA[type][index][field] = input.value || '';
+            }
+        });
+        // 保存到后端
+        const success = await saveDataToBackend();
+        if (success) {
+            renderAllFrontData();
+            alert('✅ 保存成功！前台已实时更新');
+        }
+    }
+
+    function renderRecommendTable() {
+        const table = document.getElementById('recommendTable');
+        const tbody = table.querySelector('tbody');
+        tbody.innerHTML = '';
+        
+        APP_DATA.recommends.forEach((rec, index) => {
+            const tr = document.createElement('tr');
+            
+            // 配置名称
+            const td1 = document.createElement('td');
+            const input1 = document.createElement('input');
+            input1.type = 'text';
+            input1.className = 'text-input';
+            input1.value = rec.name;
+            input1.dataset.index = index;
+            input1.dataset.field = 'name';
+            td1.appendChild(input1);
+            tr.appendChild(td1);
+            
+            // 标签文字
+            const td2 = document.createElement('td');
+            const input2 = document.createElement('input');
+            input2.type = 'text';
+            input2.className = 'text-input';
+            input2.value = rec.badge;
+            input2.dataset.index = index;
+            input2.dataset.field = 'badge';
+            td2.appendChild(input2);
+            tr.appendChild(td2);
+            
+            // 目标平台（下拉选择）
+            const td3 = document.createElement('td');
+            const select3 = document.createElement('select');
+            select3.className = 'table-select';
+            select3.dataset.index = index;
+            select3.dataset.field = 'platform';
+            select3.innerHTML = `
+                <option value="e5" ${rec.platform === 'e5' ? 'selected' : ''}>e5</option>
+                <option value="core" ${rec.platform === 'core' ? 'selected' : ''}>core</option>
+            `;
+            select3.onchange = () => updateRecommendOptions(index, select3.value);
+            td3.appendChild(select3);
+            tr.appendChild(td3);
+            
+            // CPU型号（下拉选择）
+            const td4 = document.createElement('td');
+            const select4 = createHardwareSelect(rec.platform, 'cpu', rec.config.cpu, index);
+            td4.appendChild(select4);
+            tr.appendChild(td4);
+            
+            // 主板型号
+            const td5 = document.createElement('td');
+            const select5 = createHardwareSelect(rec.platform, 'board', rec.config.board, index);
+            td5.appendChild(select5);
+            tr.appendChild(td5);
+            
+            // 内存规格
+            const td6 = document.createElement('td');
+            const select6 = createHardwareSelect(rec.platform, 'memory', rec.config.memory, index);
+            td6.appendChild(select6);
+            tr.appendChild(td6);
+            
+            // 显卡型号
+            const td7 = document.createElement('td');
+            const select7 = createHardwareSelect(rec.platform, 'gpu', rec.config.gpu, index);
+            td7.appendChild(select7);
+            tr.appendChild(td7);
+            
+            // 硬盘规格
+            const td8 = document.createElement('td');
+            const select8 = createHardwareSelect(rec.platform, 'disk', rec.config.disk, index);
+            td8.appendChild(select8);
+            tr.appendChild(td8);
+            
+            // 电源规格
+            const td9 = document.createElement('td');
+            const select9 = createHardwareSelect(rec.platform, 'power', rec.config.power, index);
+            td9.appendChild(select9);
+            tr.appendChild(td9);
+            
+            // 机箱类型
+            const td10 = document.createElement('td');
+            const select10 = createHardwareSelect(rec.platform, 'case', rec.config.case, index);
+            td10.appendChild(select10);
+            tr.appendChild(td10);
+            
+            // 操作
+            const td11 = document.createElement('td');
+            const delBtn = document.createElement('button');
+            delBtn.className = 'delete-btn';
+            delBtn.textContent = '删除';
+            delBtn.onclick = () => deleteRecommend(index);
+            td11.appendChild(delBtn);
+            tr.appendChild(td11);
+            
+            tbody.appendChild(tr);
+        });
+    }
+
+    function createHardwareSelect(platform, type, selectedValue, index) {
+        const select = document.createElement('select');
+        select.className = 'table-select';
+        select.dataset.index = index;
+        select.dataset.field = type;
+        select.dataset.config = 'true';
+        
+        let options = [];
+        if(type === 'cpu') {
+            options = platform === 'e5' ? APP_DATA.e5Cpu : APP_DATA.coreCpu;
+        } else if(type === 'board') {
+            options = platform === 'e5' ? APP_DATA.e5Board : APP_DATA.coreBoard;
+        } else if(type === 'memory') {
+            options = platform === 'e5' 
+                ? APP_DATA.memory.filter(m => m.type === 'ECC') 
+                : APP_DATA.memory.filter(m => m.type === 'DDR4');
+        } else if(type === 'gpu') {
+            options = APP_DATA.gpu;
+        } else if(type === 'disk') {
+            options = APP_DATA.disk;
+        } else if(type === 'power') {
+            options = APP_DATA.power;
+        } else if(type === 'case') {
+            options = APP_DATA.case;
+        }
+        
+        options.forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item.name;
+            opt.textContent = item.name;
+            if(item.name === selectedValue) {
+                opt.selected = true;
+            }
+            select.appendChild(opt);
+        });
+        
+        return select;
+    }
+
+    function updateRecommendOptions(index, newPlatform) {
+        APP_DATA.recommends[index].platform = newPlatform;
+        
+        if(newPlatform === 'e5') {
+            APP_DATA.recommends[index].config = {
+                cpu: APP_DATA.e5Cpu[0]?.name || '',
+                board: APP_DATA.e5Board[0]?.name || '',
+                memory: APP_DATA.memory.filter(m => m.type === 'ECC')[0]?.name || '',
+                gpu: APP_DATA.gpu[0]?.name || '',
+                disk: APP_DATA.disk[0]?.name || '',
+                power: APP_DATA.power[0]?.name || '',
+                case: APP_DATA.case[0]?.name || ''
+            };
+        } else {
+            APP_DATA.recommends[index].config = {
+                cpu: APP_DATA.coreCpu[0]?.name || '',
+                board: APP_DATA.coreBoard[0]?.name || '',
+                memory: APP_DATA.memory.filter(m => m.type === 'DDR4')[0]?.name || '',
+                gpu: APP_DATA.gpu[0]?.name || '',
+                disk: APP_DATA.disk[0]?.name || '',
+                power: APP_DATA.power[0]?.name || '',
+                case: APP_DATA.case[0]?.name || ''
+            };
+        }
+        
+        renderRecommendTable();
+    }
+
+    function addRecommend() {
+        APP_DATA.recommends.push({
+            name: "新推荐配置",
+            platform: "core",
+            badge: "店长推荐",
+            config: {
+                cpu: APP_DATA.coreCpu[0]?.name || '',
+                board: APP_DATA.coreBoard[0]?.name || '',
+                memory: APP_DATA.memory.filter(m => m.type === 'DDR4')[0]?.name || '',
+                gpu: APP_DATA.gpu[0]?.name || '',
+                disk: APP_DATA.disk[0]?.name || '',
+                power: APP_DATA.power[0]?.name || '',
+                case: APP_DATA.case[0]?.name || ''
+            }
+        });
+        renderRecommendTable();
+    }
+
+    function deleteRecommend(index) {
+        if(confirm('确定要删除这个推荐配置吗？')) {
+            APP_DATA.recommends.splice(index, 1);
+            renderRecommendTable();
+        }
+    }
+
+    async function saveRecommend() {
+        const table = document.getElementById('recommendTable');
+        
+        // 保存文本输入
+        const textInputs = table.querySelectorAll('input.text-input');
+        textInputs.forEach(input => {
+            const index = parseInt(input.dataset.index);
+            const field = input.dataset.field;
+            APP_DATA.recommends[index][field] = input.value || '';
+        });
+        
+        // 保存平台选择
+        const platformSelects = table.querySelectorAll('select[data-field="platform"]');
+        platformSelects.forEach(select => {
+            const index = parseInt(select.dataset.index);
+            APP_DATA.recommends[index].platform = select.value;
+        });
+        
+        // 保存硬件配置选择
+        const configSelects = table.querySelectorAll('select[data-config="true"]');
+        configSelects.forEach(select => {
+            const index = parseInt(select.dataset.index);
+            const field = select.dataset.field;
+            APP_DATA.recommends[index].config[field] = select.value || '';
+        });
+        
+        // 保存到后端
+        const success = await saveDataToBackend();
+        if (success) {
+            renderRecommends();
+            alert('✅ 推荐配置保存成功！');
+        }
+    }
+
+    async function saveServiceFee() {
+        APP_DATA.serviceFee = parseInt(document.getElementById('serviceFeeInput').value) || 150;
+        // 保存到后端
+        const success = await saveDataToBackend();
+        if (success) {
+            renderServiceFee();
+            calculateTotalE5();
+            calculateTotalCore();
+            alert('✅ 服务费保存成功！');
+        }
+    }
+
+    function exportFullCode() {
+        const newCode = document.documentElement.outerHTML.replace(
+            'const DEFAULT_DATA = ' + JSON.stringify(DEFAULT_DATA, null, 4),
+            'const DEFAULT_DATA = ' + JSON.stringify(APP_DATA, null, 4)
+        );
+        const blob = new Blob([newCode], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = '小黑球装机铺_最新代码.html';
+        a.click();
+        URL.revokeObjectURL(url);
+        alert('✅ 完整代码已导出！');
+    }
+
+    window.onload = async () => {
+        // 页面加载时从后端获取最新数据
+        try {
+            const response = await fetch(`${API_BASE}/api/data`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data) {
+                    APP_DATA = data;
+                }
+            }
+        } catch (e) {
+            console.warn('从后端加载数据失败，使用默认数据：', e);
+        }
+        // 渲染页面
+        renderAllFrontData();
+    };
 </script>
 </body>
 </html>
